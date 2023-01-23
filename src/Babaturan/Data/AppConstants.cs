@@ -7,6 +7,12 @@ namespace Babaturan.Data
 {
     public class AppConstants
     {
+        public static long MaxAllowedFileSize = 500 * 1024000;
+        public static string StorageEndpoint = "";
+        public static string StorageAccess = "";
+        public static string StorageSecret = "";
+        public static string StorageBucket = "";
+
         public static string UploadUrlPrefix = "https://storagemurahaje.blob.core.windows.net/Babaturan";
         public const int FACE_WIDTH = 180;
         public const int FACE_HEIGHT = 135;

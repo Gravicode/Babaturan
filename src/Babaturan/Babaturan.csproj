@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
@@ -17,6 +17,10 @@
     <None Include="Shared\SurveyPrompt.razor" />
   </ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="Blazored.Video" Version="1.0.1" />
+		<PackageReference Include="Aspose.Zip" Version="22.12.0" />
+		<PackageReference Include="SkiaSharp" Version="2.88.3" />
+		<PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.3" />
 		<PackageReference Include="Blazored.Typeahead" Version="4.4.0" />
 		<PackageReference Include="ChartJs.Blazor.Fork" Version="2.0.2" />
 		<PackageReference Include="GoogleMaps.LocationServices" Version="1.2.0.2" />
@@ -44,10 +48,12 @@
 		<PackageReference Include="System.IO.Packaging" Version="4.7.0" />
 		<PackageReference Include="System.Net.Http.Formatting.Extension" Version="5.2.3" />
 		<PackageReference Include="ZXing.Net" Version="0.16.6" />
+		<PackageReference Include="PSC.Blazor.Components.BrowserDetect" Version="1.0.6" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Babaturan.Tools\Babaturan.Tools.csproj" />
+		<ProjectReference Include="..\IDCH.Storage\IDCH.Storage.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

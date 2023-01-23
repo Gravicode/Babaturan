@@ -1,0 +1,74 @@
+﻿<div class="modal fade" id="modalCreateGroup" tabindex="-1" aria-labelledby="modalLabelCreateGroup" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Title -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabelCreateGroup">Create Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Form START -->
+                <form>
+                    <!-- Group name -->
+                    <div class="mb-3">
+                        <label class="form-label">Group name</label>
+                        <input type="text" class="form-control" placeholder="Add Group name here">
+                    </div>
+                    <!-- Group picture -->
+                    <div class="mb-3">
+                        <label class="form-label">Group picture</label>
+                        <!-- Avatar upload START -->
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-uploader me-3">
+                                <!-- Avatar edit -->
+                                <div class="avatar-edit">
+                                    <input type='file' id="avatarUpload" accept=".png, .jpg, .jpeg" />
+                                    <label for="avatarUpload"></label>
+                                </div>
+                                <!-- Avatar preview -->
+                                <div class="avatar avatar-xl position-relative">
+                                    <img id="avatar-preview" class="avatar-img rounded-circle border border-white border-3 shadow" src="assets/images/avatar/placeholder.jpg" alt="">
+                                </div>
+                            </div>
+                            <!-- Avatar remove button -->
+                            <div class="avatar-remove">
+                                <button type="button" id="avatar-reset-img" class="btn btn-light">Delete</button>
+                            </div>
+                        </div>
+                        <!-- Avatar upload END -->
+                    </div>
+                    <!-- Select audience -->
+                    <div class="mb-3">
+                        <label class="form-label d-block">Select audience</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="PublicRadioOptions" id="publicRadio1" value="option1">
+                            <label class="form-check-label" for="publicRadio1">Public</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="PublicRadioOptions" id="privateRadio2" value="option2">
+                            <label class="form-check-label" for="privateRadio2">Private</label>
+                        </div>
+                    </div>
+                    <!-- Invite friend -->
+                    <div class="mb-3">
+                        <label class="form-label">Invite friend </label>
+                        <input type="text" class="form-control" placeholder="Add friend name here">
+                    </div>
+                    <!-- Group description -->
+                    <div class="mb-3">
+                        <label class="form-label">Group description </label>
+                        <textarea class="form-control" rows="3" placeholder="Description here"></textarea>
+                    </div>
+                </form>
+                <!-- Form END -->
+            </div>
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success-soft">Create now</button>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+
+}

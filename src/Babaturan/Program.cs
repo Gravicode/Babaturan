@@ -11,6 +11,7 @@ using PdfSharp.Charting;
 using System.Net;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Babaturan.Models;
+using Babaturan.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -56,6 +57,7 @@ builder.Services.AddTransient<WorkExperienceService>();
 builder.Services.AddTransient<MessageHeaderService>();
 builder.Services.AddTransient<MessageDetailService>();
 builder.Services.AddTransient<MessageAttachmentService>();
+builder.Services.AddTransient<PageViewService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins",
@@ -99,7 +101,17 @@ MailService.UseSendGrid = true;
 SmsService.UserKey = Configuration["SmsSettings:ZenzivaUserKey"];
 SmsService.PassKey = Configuration["SmsSettings:ZenzivaPassKey"];
 SmsService.TokenKey = Configuration["SmsSettings:TokenKey"];
+AppConstants.StorageEndpoint = Configuration["Storage:Endpoint"];
+AppConstants.StorageAccess = Configuration["Storage:Access"];
+AppConstants.StorageSecret = Configuration["Storage:Secret"];
+AppConstants.StorageBucket = Configuration["Storage:Bucket"];
+var setting = new StorageSetting() { };
+setting.Bucket = AppConstants.StorageBucket;
+setting.SecretKey = AppConstants.StorageSecret;
+setting.AccessKey = AppConstants.StorageAccess;
 
+builder.Services.AddSingleton(setting);
+builder.Services.AddTransient<StorageObjectService>();
 
 AppConstants.DefaultPass = Configuration["App:DefaultPass"];
 

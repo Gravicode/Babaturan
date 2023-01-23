@@ -1,7 +1,7 @@
 /**
 * Social - Network, Community and Event Theme
 *
-* @author Webestica (https://www.webestica.com/)
+* @author Gravicode Studio (https://studios.gravicode.com/)
 * @version 1.0.0
 **/
 

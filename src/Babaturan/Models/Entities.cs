@@ -8,6 +8,42 @@ using System.Reflection;
 namespace Babaturan.Models
 {
     #region helpers model  
+    public class StorageObject
+    {
+        public string Name { get; set; }
+        public long Size { get; set; }
+        public string FileUrl { get; set; }
+        public string ContentType { get; set; }
+        public DateTime? LastUpdate { get; set; }
+        public DateTime? LastAccess { get; set; }
+    }
+    public class StorageSetting
+    {
+        public string EndpointUrl { get; set; } = "https://is3.cloudhost.id";
+        public string AccessKey { get; set; }
+        public string SecretKey { get; set; }
+        public string Region { get; set; } = "USWest1";
+        public string Bucket { get; set; }
+        public string BaseUrl { get; set; }
+        public bool Ssl { get; set; } = true;
+        public StorageSetting()
+        {
+
+        }
+        public StorageSetting(string Endpoint, string Accesskey, string Secretkey, string Region, string Bucket)
+        {
+            this.EndpointUrl = Endpoint;
+            this.AccessKey = Accesskey;
+            this.SecretKey = Secretkey;
+            this.Region = Region;
+            this.Bucket = Bucket;
+            GenerateBaseUrl();
+        }
+        public void GenerateBaseUrl()
+        {
+            this.BaseUrl = EndpointUrl + "/{bucket}/{key}";
+        }
+    }
     public class OutputCls
     {
         public OutputCls()
@@ -26,7 +62,22 @@ namespace Babaturan.Models
     }
     public record PopularPeople(string Username, int TotalFollower, UserProfile User);
     #endregion
+    [Table("page_view")]
+    public class PageView
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
 
+        public string PageName { set; get; }
+        public string PageUrl { set; get; }
+        [ForeignKey(nameof(User)), Column(Order = 0)]
+        public long UserId { get; set; }
+        public UserProfile User { set; get; }
+        public string UserName { set; get; }
+        public string Agent { set; get; }
+        public DateTime HitDate { set; get; }
+    }
     [Table("message_header")]
     public class MessageHeader
     {

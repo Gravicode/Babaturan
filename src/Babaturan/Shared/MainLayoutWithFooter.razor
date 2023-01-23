@@ -1,0 +1,89 @@
+﻿@inherits LayoutComponentBase
+@using Blazored.Toast.Configuration
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager NavMgr
+@inject IJSRuntime jsRuntime
+@inject UserProfileService Userservice
+<PageTitle>Babaturan App</PageTitle>
+@inject IJSRuntime IJS
+
+
+<!-- =======================
+Header START -->
+<HeaderNav></HeaderNav>
+<!-- =======================
+Header END -->
+<!-- **************** MAIN CONTENT START **************** -->
+<CascadingValue Value="this">
+    <!-- Main Content -->
+    @Body
+</CascadingValue>
+<FooterPage></FooterPage>
+<!-- **************** MAIN CONTENT END **************** -->
+<!-- Main Chat START -->
+<MainChatPage></MainChatPage>
+<!-- Main Chat END -->
+<!-- Modal create Feed START -->
+<CreateFeedModal></CreateFeedModal>
+<!-- Modal create feed END -->
+<!-- Modal create Feed photo START -->
+<CreatePhotoModal></CreatePhotoModal>
+<!-- Modal create Feed photo END -->
+<!-- Modal create Feed video START -->
+<CreateVideoModal></CreateVideoModal>
+<!-- Modal create Feed video END -->
+<!-- Modal create events START -->
+<CreateEventModal></CreateEventModal>
+<!-- Modal create events END -->
+<CreateAlbumModal></CreateAlbumModal>
+
+<CreateActionPhotoModal></CreateActionPhotoModal>
+
+<CreateActionVideoModal></CreateActionVideoModal>
+
+<CreateGroupModal></CreateGroupModal>
+<LoginActivityModal></LoginActivityModal>
+
+<BlazoredToasts Position="ToastPosition.BottomRight"
+                Timeout="10"
+                SuccessClass="success-toast-override"
+                SuccessIconClass="fa fa-thumbs-up"
+                ErrorIconClass="fa fa-bug" />
+
+@code {
+    [Parameter]
+    public bool IsTransparent { get; set; } = true;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    async Task Keluar()
+    {
+        NavMgr.NavigateTo($"/logout", true);
+        //await localStorage.SetItemAsync(AppConstants.NameKey, "");
+        //NavMgr.NavigateTo($"/login");
+    }
+
+
+    string Nama = "Saya";
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var UserName = user.Identity.Name;
+            Nama = Userservice.GetUserByEmail(UserName)?.FullName;
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            IJS.InvokeVoidAsync("InitApp");
+        }
+    }
+}

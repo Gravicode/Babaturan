@@ -18,6 +18,18 @@ namespace Babaturan.Data
             if (db == null) db = new BabaturanDB();
             //db.Database.EnsureCreated();
         }
+        public bool Login(string username, string password)
+        {
+            bool isAuthenticate = false;
+            var usr = db.UserProfiles.Where(x => x.Username == username).FirstOrDefault();
+            if (usr != null)
+            {
+                var enc = new Encryption();
+                var pass = enc.Decrypt(usr.Password);
+                isAuthenticate = pass == password;
+            }
+            return isAuthenticate;
+        }
         public bool DeleteData(object Id)
         {
             if (Id is long FID)
