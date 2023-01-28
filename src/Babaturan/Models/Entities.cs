@@ -62,6 +62,60 @@ namespace Babaturan.Models
     }
     public record PopularPeople(string Username, int TotalFollower, UserProfile User);
     #endregion
+    public enum AccessTypes
+    {
+        Public, Friend, Private
+    }
+
+    [Table("post_story")]
+    public class PostStory
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+
+        [ForeignKey(nameof(User)), Column(Order = 0)]
+        public long UserId { get; set; }
+        public UserProfile User { set; get; }
+        public string UserName { set; get; }
+        public DateTime PostDate { set; get; }
+        public AccessTypes AccessType { get; set; } = AccessTypes.Public;
+        public List<StoryMedia>? ListMedia { get; set; }
+    }
+    public enum StoryTypes
+    {
+        Image,Video
+    }
+    public class MediaComment
+    {
+        public DateTime CommentDate { get; set; }
+        public string Comment { get; set; }
+        public string UserName { set; get; }
+    }
+    public class StoryMedia
+    {
+        public int Order { get; set; } = 0;
+        public string MediaUrl { get; set; }
+        public StoryTypes StoryType { get; set; } = StoryTypes.Image;
+        public string? Desc { get; set; }
+
+        public List<MediaComment>? Comments { get; set; }
+    }
+    [Table("friend_request")]
+    public class FriendRequest
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+
+        [ForeignKey(nameof(User)), Column(Order = 0)]
+        public long UserId { get; set; }
+        public UserProfile User { set; get; }
+        public string UserName { set; get; }
+        public DateTime RequestDate { set; get; }
+
+        public bool? IsApproved { get; set; }
+    }
     [Table("page_view")]
     public class PageView
     {

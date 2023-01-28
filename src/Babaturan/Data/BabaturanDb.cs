@@ -19,6 +19,8 @@ namespace Babaturan.Data
             : base(options)
         {
         }
+        public DbSet<PostStory> PostStorys { get; set; }
+        public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<PageView> PageViews { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<Log> Logs { get; set; }
@@ -46,6 +48,12 @@ namespace Babaturan.Data
             builder.Entity<SourceInfo>().Property<DateTime>("UpdatedTimestamp");
             */
           
+            builder.Entity<PostStory>().OwnsMany(
+             x => x.ListMedia, ownedNavigationBuilder => {
+                 ownedNavigationBuilder.ToJson();
+                 ownedNavigationBuilder.OwnsMany(_ => _.Comments);
+             }
+            );
             base.OnModelCreating(builder);
         }
 

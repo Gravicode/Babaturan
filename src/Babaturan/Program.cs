@@ -58,6 +58,7 @@ builder.Services.AddTransient<MessageHeaderService>();
 builder.Services.AddTransient<MessageDetailService>();
 builder.Services.AddTransient<MessageAttachmentService>();
 builder.Services.AddTransient<PageViewService>();
+builder.Services.AddTransient<FriendRequestService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins",
