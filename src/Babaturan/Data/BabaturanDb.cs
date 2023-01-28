@@ -19,7 +19,8 @@ namespace Babaturan.Data
             : base(options)
         {
         }
-        public DbSet<PostStory> PostStorys { get; set; }
+        //public DbSet<PostStory> PostStorys { get; set; }
+        public DbSet<Employee> Employees { get; set; }
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<PageView> PageViews { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; }
@@ -39,6 +40,14 @@ namespace Babaturan.Data
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            
+            builder.Entity<Employee>().OwnsOne(
+            employee => employee.ContactDetails, ownedNavigationBuilder => {
+                ownedNavigationBuilder.ToJson();
+                ownedNavigationBuilder.OwnsOne(_ => _.Contacts);
+                ownedNavigationBuilder.OwnsMany(_ => _.Addresses);
+            }
+        );
             /*
             builder.Entity<DataEventRecord>().HasKey(m => m.DataEventRecordId);
             builder.Entity<SourceInfo>().HasKey(m => m.SourceInfoId);
@@ -47,13 +56,13 @@ namespace Babaturan.Data
             builder.Entity<DataEventRecord>().Property<DateTime>("UpdatedTimestamp");
             builder.Entity<SourceInfo>().Property<DateTime>("UpdatedTimestamp");
             */
-          
-            builder.Entity<PostStory>().OwnsMany(
-             x => x.ListMedia, ownedNavigationBuilder => {
-                 ownedNavigationBuilder.ToJson();
-                 ownedNavigationBuilder.OwnsMany(_ => _.Comments);
-             }
-            );
+            /*
+              builder.Entity<PostStory>().OwnsMany(
+               x => x.ListMedia, ownedNavigationBuilder => {
+                   ownedNavigationBuilder.ToJson();
+                   ownedNavigationBuilder.OwnsMany(_ => _.Comments);
+               }
+              );*/
             base.OnModelCreating(builder);
         }
 

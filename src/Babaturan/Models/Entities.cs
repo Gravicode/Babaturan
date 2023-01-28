@@ -66,7 +66,31 @@ namespace Babaturan.Models
     {
         Public, Friend, Private
     }
-
+    public class ContactDetails
+    {
+        public Contacts? Contacts { get; set; }
+        public List<Address>? Addresses { get; set; }
+    }
+    public class Contacts
+    {
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+    }
+    public class Address
+    {
+        public string? AddressType { get; set; }
+        public string? DNO { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? Country { get; set; }
+    }
+    public class Employee
+    {
+        public int Id { get; set; }
+        public string? FullName { get; set; }
+        
+        public ContactDetails? ContactDetails { get; set; }
+    }
     [Table("post_story")]
     public class PostStory
     {
