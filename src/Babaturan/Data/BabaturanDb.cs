@@ -19,8 +19,21 @@ namespace Babaturan.Data
             : base(options)
         {
         }
-        //public DbSet<PostStory> PostStorys { get; set; }
-        public DbSet<Employee> Employees { get; set; }
+        public DbSet<UserGroup> UserGroups { get; set; }
+        public DbSet<CustomGroup> CustomGroups { get; set; }
+        public DbSet<CustomPage> CustomPages { get; set; }
+        public DbSet<Blog> Blogs { get; set; }
+        public DbSet<BlogComment> BlogComments { get; set; }
+        public DbSet<MyActivity> MyActivitys { get; set; }
+        public DbSet<PictureAlbum> PictureAlbums { get; set; }
+        public DbSet<PicturePost> PicturePosts { get; set; }
+        public DbSet<PostView> PostViews { get; set; }
+        public DbSet<ReportPost> ReportPosts { get; set; }
+        public DbSet<BlockedPost> BlockedPosts { get; set; }
+        public DbSet<HidePost> HidePosts { get; set; }
+        public DbSet<SavedPost> SavedPosts { get; set; }
+        public DbSet<PostStory> PostStorys { get; set; }
+      
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<PageView> PageViews { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; }
@@ -30,6 +43,7 @@ namespace Babaturan.Data
         public DbSet<Trending> Trendings { get; set; }
         public DbSet<Follow> Follows { get; set; }
         public DbSet<PostLike> PostLikes { get; set; }
+        public DbSet<PostDislike> PostDislikes { get; set; }
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<PostComment> PostComments { get; set; }
         public DbSet<WorkExperience> WorkExperiences { get; set; }
@@ -40,14 +54,7 @@ namespace Babaturan.Data
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            
-            builder.Entity<Employee>().OwnsOne(
-            employee => employee.ContactDetails, ownedNavigationBuilder => {
-                ownedNavigationBuilder.ToJson();
-                ownedNavigationBuilder.OwnsOne(_ => _.Contacts);
-                ownedNavigationBuilder.OwnsMany(_ => _.Addresses);
-            }
-        );
+
             /*
             builder.Entity<DataEventRecord>().HasKey(m => m.DataEventRecordId);
             builder.Entity<SourceInfo>().HasKey(m => m.SourceInfoId);
@@ -56,13 +63,33 @@ namespace Babaturan.Data
             builder.Entity<DataEventRecord>().Property<DateTime>("UpdatedTimestamp");
             builder.Entity<SourceInfo>().Property<DateTime>("UpdatedTimestamp");
             */
-            /*
-              builder.Entity<PostStory>().OwnsMany(
+            //builder.Ignore<Post>();
+            builder.Entity<Post>().OwnsOne(x => x.Location);
+            builder.Entity<Post>().OwnsOne(x => x.Video, y => { y.ToJson(); });
+            
+            builder.Entity<Post>().OwnsOne(
+              x => x.Event, ownedNavigationBuilder => {
+                  ownedNavigationBuilder.ToJson();
+                  ownedNavigationBuilder.OwnsOne(_ => _.EventLocation);
+                  ownedNavigationBuilder.OwnsMany(_ => _.Guests);
+                  ownedNavigationBuilder.OwnsMany(_ => _.Attachments);
+                  ownedNavigationBuilder.OwnsMany(_ => _.Visitors);
+                  ownedNavigationBuilder.OwnsMany(_ => _.Registered);
+                  ownedNavigationBuilder.OwnsMany(_ => _.Attendance);
+                  ownedNavigationBuilder.OwnsMany(_ => _.FAQs);
+                  ownedNavigationBuilder.OwnsMany(_ => _.Hosts);
+                  ownedNavigationBuilder.OwnsMany(_ => _.Schedules);
+              }
+             );
+            
+            
+            
+            builder.Entity<PostStory>().OwnsMany(
                x => x.ListMedia, ownedNavigationBuilder => {
                    ownedNavigationBuilder.ToJson();
                    ownedNavigationBuilder.OwnsMany(_ => _.Comments);
                }
-              );*/
+              );
             base.OnModelCreating(builder);
         }
 
@@ -80,7 +107,7 @@ namespace Babaturan.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseMySql(AppConstants.SQLConn,ServerVersion.AutoDetect(AppConstants.SQLConn));
+                optionsBuilder.UseMySql(AppConstants.SQLConn,ServerVersion.AutoDetect(AppConstants.SQLConn),options=>options.UseMicrosoftJson());
             }
         }
         private void updateUpdatedProperty<T>() where T : class

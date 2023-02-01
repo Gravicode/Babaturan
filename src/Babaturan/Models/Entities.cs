@@ -1,5 +1,6 @@
 ﻿using GemBox.Document;
 using Microsoft.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.Design;
@@ -64,33 +65,9 @@ namespace Babaturan.Models
     #endregion
     public enum AccessTypes
     {
-        Public, Friend, Private
+        Public, Friend, Private,Custom
     }
-    public class ContactDetails
-    {
-        public Contacts? Contacts { get; set; }
-        public List<Address>? Addresses { get; set; }
-    }
-    public class Contacts
-    {
-        public string? Phone { get; set; }
-        public string? Email { get; set; }
-    }
-    public class Address
-    {
-        public string? AddressType { get; set; }
-        public string? DNO { get; set; }
-        public string? City { get; set; }
-        public string? State { get; set; }
-        public string? Country { get; set; }
-    }
-    public class Employee
-    {
-        public int Id { get; set; }
-        public string? FullName { get; set; }
-        
-        public ContactDetails? ContactDetails { get; set; }
-    }
+  
     [Table("post_story")]
     public class PostStory
     {
@@ -295,8 +272,172 @@ namespace Babaturan.Models
         public long RepostByUserId { set; get; }
         public UserProfile RepostByUser { set; get; }
     }
+    [Table("saved_post")]
+    public class SavedPost
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+        public Post Post { set; get; }
+        [ForeignKey("Post")]
+        public long PostId { set; get; }
+        [ForeignKey("UserProfile")]
+        public long UserId { set; get; }
+        public string UserName { set; get; }
+        public UserProfile User { set; get; }
+        public DateTime CreatedDate { set; get; }
+    } 
+    [Table("hide_post")]
+    public class HidePost
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+        public Post Post { set; get; }
+        [ForeignKey("Post")]
+        public long PostId { set; get; }
+        [ForeignKey("UserProfile")]
+        public long UserId { set; get; }
+        public string UserName { set; get; }
+        public UserProfile User { set; get; }
+        public DateTime CreatedDate { set; get; }
+    } 
+    
+    [Table("blocked_post")]
+    public class BlockedPost
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+     
+        [ForeignKey("Post")]
+        public long PostId { set; get; }
+        public Post Post { set; get; }
+        [ForeignKey("UserProfile")]
+        public long UserId { set; get; }
+        public string UserName { set; get; }
+        public UserProfile User { set; get; }
+        public DateTime CreatedDate { set; get; }
+    }
+    public enum ReportPostTypes { Racist, Hate, Porn, Illegal, IDontLike }
+    [Table("report_post")]
+    public class ReportPost
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+        public Post Post { set; get; }
+        [ForeignKey("Post")]
+        public long PostId { set; get; }
+        [ForeignKey("UserProfile")]
+        public long UserId { set; get; }
+        public string UserName { set; get; }
+        public UserProfile User { set; get; }
+        public ReportPostTypes ReportType { get; set; }
+        public string Complain { get; set; }
+        public DateTime CreatedDate { set; get; }
+    }
+    [Table("user_group")]
+    public class UserGroup
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+
+        [ForeignKey(nameof(User)), Column(Order = 0)]
+        public long UserId { set; get; }
+        public UserProfile User { set; get; }
+
+        [ForeignKey(nameof(Group)), Column(Order = 1)]
+        public long GroupId { set; get; }
+        public CustomGroup Group { set; get; }
+        public DateTime JoinDate { set; get; }
+       
+
+    }
+    [Table("custom_group")]
+    public class CustomGroup
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+
+        [ForeignKey(nameof(User)), Column(Order = 0)]
+        public long UserId { set; get; }
+        public UserProfile User { set; get; }
+        public DateTime CreatedDate { set; get; }
+        public string GroupName { set; get; }
+        public string? ImageUrl { set; get; }
+        public AccessTypes AccessType { set; get; }
+      
+        public string? Desc { set; get; }
+        public ICollection<Post> Posts { get; set; }
+        public ICollection<UserGroup> UserGroups { get; set; }
+
+    }
+    [Table("custom_page")]
+    public class CustomPage
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+   
+        [ForeignKey(nameof(User)), Column(Order = 0)]
+        public long UserId { set; get; }
+        public UserProfile User { set; get; }
+        public DateTime CreatedDate { set; get; }
+        public string PageName { set; get; }
+        public string DisplayName { set; get; }
+        public string? Email { set; get; }
+        public string? Category { set; get; }
+        public string? Website { set; get; }
+        public string? PhoneNumber { set; get; }
+        public string? About { set; get; }
+        public string? FBUrl { set; get; }
+        public string? TwitterUrl { set; get; }
+        public string? InstagramUrl { set; get; }
+        public string? LinkedInUrl { set; get; }
+        
 
 
+    }
+
+    [Table("blog")]
+    public class Blog
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+        public string Uid { set; get; }
+        [ForeignKey(nameof(User)), Column(Order = 0)]
+        public long UserId { set; get; }
+        public UserProfile User { set; get; }
+        public DateTime CreatedDate { set; get; }
+        public string Body { set; get; }
+        public string Title { set; get; }
+        public string? Tags { set; get; }
+        public string? Category { set; get; }
+        public string? ImageUrl { set; get; }
+        public bool Featured { get; set; } = false;
+
+        public ICollection<BlogComment> BlogComments { get; set; }
+
+    }
+
+    [Table("blog_comment")]
+    public class BlogComment
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+        [ForeignKey(nameof(Blog)), Column(Order = 0)]
+        public long BlogId { set; get; }
+        public Blog Blog { set; get; }
+        public string Name { set; get; }
+        public string Email { set; get; }
+        public string Comment { set; get; }
+        public DateTime CreatedDate { set; get; }
+    }
     [Table("postlike")]
     public class PostLike
     {
@@ -310,6 +451,92 @@ namespace Babaturan.Models
         public long LikedByUserId { set; get; }
         public string LikedByUserName { set; get; }
         public UserProfile LikedByUser { set; get; }
+        public DateTime CreatedDate { set; get; }
+    } 
+    
+    [Table("postdislike")]
+    public class PostDislike
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+        public Post Post { set; get; }
+        [ForeignKey("Post")]
+        public long PostId { set; get; }
+        [ForeignKey("UserProfile")]
+        public long DislikedByUserId { set; get; }
+        public string DislikedByUserName { set; get; }
+        public UserProfile DislikedByUser { set; get; }
+        public DateTime CreatedDate { set; get; }
+    }
+    [Table("my_activity")]
+    public class MyActivity
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public string? Activity { get; set; }
+        [ForeignKey("UserProfile")]
+        public long UserId { set; get; }
+        public string UserName { set; get; }
+        public UserProfile User { set; get; }
+        public Post? Post { set; get; }
+        [ForeignKey("Post")]
+        public long? PostId { set; get; }
+        public DateTime ActivityDate { set; get; }
+    }
+
+    [Table("picture_album")]
+    public class PictureAlbum
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public string? Desc { get; set; }
+        public AccessTypes AccessType { get; set; } = AccessTypes.Public;
+        [ForeignKey("UserProfile")]
+        public long UserId { set; get; }
+        public string UserName { set; get; }
+        public UserProfile User { set; get; }
+
+        public List<PicturePost>? PicturePosts { get; set; }
+        public DateTime CreatedDate { set; get; }
+    }
+    
+    [Table("picture_post")]
+    public class PicturePost
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+       
+        [ForeignKey("Album")]
+        public long AlbumId { set; get; }
+      
+        public PictureAlbum Album { set; get; }
+
+        [ForeignKey("Post")]
+        public long PostId { set; get; }
+
+        public Post Post { set; get; }
+        public DateTime CreatedDate { set; get; }
+    }
+
+    [Table("postview")]
+    public class PostView
+    {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public long Id { get; set; }
+        public Post Post { set; get; }
+        [ForeignKey("Post")]
+        public long PostId { set; get; }
+        [ForeignKey("UserProfile")]
+        public long UserId { set; get; }
+        public string UserName { set; get; }
+        public UserProfile User { set; get; }
         public DateTime CreatedDate { set; get; }
     }
 
@@ -364,6 +591,74 @@ namespace Babaturan.Models
         public DateTime? ReplyDate { get; set; }
     }
 
+    public enum PostTypes
+    {
+        ImagePost, VideoPost, EventPost, ActivityPost, PollPost, QuestionPost
+    }
+    public class PostLocation
+    {
+        public string Address { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+
+    public class AttachmentItem
+    {
+        public string FileName { get; set; }
+        public string FileUrl { get; set; }
+        public string FileType { get; set; }
+    }
+    public class EventSchedule
+    {
+        public DateTime ScheduleTime { get; set; }
+        public string Title { get; set; }
+        public string Desc { get; set; }
+    }
+
+    public class EventHost
+    {
+        public string Name { get; set; }
+        public string Title { get; set; }
+        public string PicUrl { get; set; }
+    }
+
+    public class EventFAQ
+    {
+        public string Question { get; set; }
+        public string Answer { get; set; }
+    }
+    public enum EventTypes { Online, Offline }
+    public class ItemString
+    {
+        public string ItemValue { get; set; }
+    }
+    public class PostEvent
+    {
+        public string Title { get; set; }
+        public string? Desc { get; set; }
+        public string? Category { get; set; }
+        public EventTypes EventType { get; set; }
+        public DateTime EventDate { get; set; }
+        public TimeSpan EventTime { get; set; }
+        public string Duration { get; set; }
+        public PostLocation EventLocation { get; set; }
+        public List<ItemString> Guests { get; set; }
+        public List<AttachmentItem> Attachments { get; set; }
+        public List<ItemString> Visitors { get; set; }
+        public List<ItemString> Registered { get; set; }
+        public List<ItemString> Attendance { get; set; }
+        public List<EventFAQ> FAQs { get; set; }
+        public List<EventHost> Hosts { get; set; }
+        public List<EventSchedule> Schedules { get; set; }
+
+    }
+    public class PostVideo
+    {
+        public string? Title { get; set; }
+        public string? Category { get; set; }
+        public string? ThumbnailUrl { get; set; }
+        public TimeSpan? Duration { get; set; }
+    }
     [Table("post")]
     public class Post
     {
@@ -382,13 +677,26 @@ namespace Babaturan.Models
         public string? ImageUrls { set; get; }
         public string? Hashtags { set; get; }
 
+        public bool IsBlocked { get; set; } = false;
+        public AccessTypes AccessType { get; set; }
+        public PostTypes PostType { get; set; } = PostTypes.ActivityPost;
+        public PostLocation? Location { get; set; }
+        public PostEvent? Event { get; set; }
+        public PostVideo? Video { get; set; }
+
         public ICollection<Repost> Reposts { get; set; }
         public UserProfile User { get; set; }
-
         public ICollection<PostLike> PostLikes { get; set; }
+        public ICollection<PostDislike> PostDislikes { get; set; }
         public ICollection<PostComment> PostComments { get; set; }
-
         public ICollection<CommentLike> CommentLikes { get; set; }
+        public ICollection<BlockedPost> BlockedPosts { get; set; }
+        public bool IsGroupPost { get; set; } = false;
+
+        [ForeignKey("CustomGroup")]
+        public long? GroupId { set; get; }
+        public CustomGroup? Group { get; set; }
+
     }
 
     public enum LogCategory
@@ -453,7 +761,10 @@ namespace Babaturan.Models
         [InverseProperty(nameof(Notification.User))]
         public ICollection<Notification> Notifications { get; set; }
         [InverseProperty(nameof(MessageHeader.User))]
-        public ICollection<MessageHeader> UserMessages { get; set; }
+        public ICollection<MessageHeader> UserMessages { get; set; } 
+
+        [InverseProperty(nameof(SavedPost.User))]
+        public ICollection<SavedPost> SavedPosts { get; set; }
 
         public bool EnableLikesAndComment { get; set; } = true;
         public bool EnableReplyToMyComment { get; set; } = true;
