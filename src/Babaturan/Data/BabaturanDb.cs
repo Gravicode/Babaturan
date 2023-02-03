@@ -65,7 +65,7 @@ namespace Babaturan.Data
             builder.Entity<SourceInfo>().Property<DateTime>("UpdatedTimestamp");
             */
             //builder.Ignore<Post>();
-            builder.Entity<Post>().OwnsOne(x => x.Location);
+            builder.Entity<Post>().OwnsOne(x => x.Location, y => { y.ToJson(); });
             builder.Entity<Post>().OwnsOne(x => x.Video, y => { y.ToJson(); });
             
             builder.Entity<Post>().OwnsOne(

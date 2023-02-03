@@ -265,10 +265,10 @@ namespace Babaturan.Models
         [Key, Column(Order = 0)]
         public long Id { get; set; }
         public Post Post { set; get; }
-        [ForeignKey("Post")]
+        [ForeignKey(nameof(Post))]
         public long PostId { set; get; }
         public string RepostByUserName { set; get; }
-        [ForeignKey("UserProfile")]
+        [ForeignKey(nameof(RepostByUser))]
         public long RepostByUserId { set; get; }
         public UserProfile RepostByUser { set; get; }
     }
@@ -279,9 +279,9 @@ namespace Babaturan.Models
         [Key, Column(Order = 0)]
         public long Id { get; set; }
         public Post Post { set; get; }
-        [ForeignKey("Post")]
+        [ForeignKey(nameof(Post))]
         public long PostId { set; get; }
-        [ForeignKey("UserProfile")]
+        [ForeignKey(nameof(User))]
         public long UserId { set; get; }
         public string UserName { set; get; }
         public UserProfile User { set; get; }
@@ -310,10 +310,10 @@ namespace Babaturan.Models
         [Key, Column(Order = 0)]
         public long Id { get; set; }
      
-        [ForeignKey("Post")]
+        [ForeignKey(nameof(Post))]
         public long PostId { set; get; }
         public Post Post { set; get; }
-        [ForeignKey("UserProfile")]
+        [ForeignKey(nameof(User))]
         public long UserId { set; get; }
         public string UserName { set; get; }
         public UserProfile User { set; get; }
@@ -445,9 +445,9 @@ namespace Babaturan.Models
         [Key, Column(Order = 0)]
         public long Id { get; set; }
         public Post Post { set; get; }
-        [ForeignKey("Post")]
+        [ForeignKey(nameof(Post))]
         public long PostId { set; get; }
-        [ForeignKey("UserProfile")]
+        [ForeignKey(nameof(LikedByUser))]
         public long LikedByUserId { set; get; }
         public string LikedByUserName { set; get; }
         public UserProfile LikedByUser { set; get; }
@@ -461,7 +461,7 @@ namespace Babaturan.Models
         [Key, Column(Order = 0)]
         public long Id { get; set; }
         public Post Post { set; get; }
-        [ForeignKey("Post")]
+        [ForeignKey(nameof(Post))]
         public long PostId { set; get; }
         [ForeignKey("UserProfile")]
         public long DislikedByUserId { set; get; }
@@ -548,9 +548,9 @@ namespace Babaturan.Models
         public long Id { get; set; }
         public string Comment { set; get; }
         public Post Post { set; get; }
-        [ForeignKey("Post")]
+        [ForeignKey(nameof(Post))]
         public long PostId { set; get; }
-        [ForeignKey("UserProfile")]
+        [ForeignKey(nameof(User))]
         public long UserId { set; get; }
         public string Username { set; get; }
         public DateTime CreatedDate { set; get; }
@@ -665,7 +665,7 @@ namespace Babaturan.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key, Column(Order = 0)]
         public long Id { get; set; }
-        [ForeignKey("UserProfile")]
+        [ForeignKey(nameof(User))]
         public long UserId { set; get; }
         public string UserName { set; get; }
         public DateTime CreatedDate { set; get; }
@@ -683,17 +683,20 @@ namespace Babaturan.Models
         public PostLocation? Location { get; set; }
         public PostEvent? Event { get; set; }
         public PostVideo? Video { get; set; }
-
+        [InverseProperty(nameof(Repost.Post))]
         public ICollection<Repost> Reposts { get; set; }
         public UserProfile User { get; set; }
+        [InverseProperty(nameof(PostLike.Post))]
         public ICollection<PostLike> PostLikes { get; set; }
+        [InverseProperty(nameof(PostDislike.Post))]
         public ICollection<PostDislike> PostDislikes { get; set; }
+        [InverseProperty(nameof(PostComment.Post))]
         public ICollection<PostComment> PostComments { get; set; }
-        public ICollection<CommentLike> CommentLikes { get; set; }
+        [InverseProperty(nameof(BlockedPost.Post))]
         public ICollection<BlockedPost> BlockedPosts { get; set; }
         public bool IsGroupPost { get; set; } = false;
 
-        [ForeignKey("CustomGroup")]
+        [ForeignKey(nameof(CustomGroup))]
         public long? GroupId { set; get; }
         public CustomGroup? Group { get; set; }
 
@@ -751,9 +754,13 @@ namespace Babaturan.Models
 
         [InverseProperty(nameof(Follow.User))]
         public ICollection<Follow> FollowedBy { get; set; }
+        [InverseProperty(nameof(Repost.RepostByUser))]
         public ICollection<Repost> Reposts { get; set; }
+        [InverseProperty(nameof(PostLike.LikedByUser))]
         public ICollection<PostLike> PostLikes { get; set; }
+        [InverseProperty(nameof(PostComment.User))]
         public ICollection<PostComment> PostComments { get; set; }
+        [InverseProperty(nameof(Post.User))]
         public ICollection<Post> Posts { get; set; }
         [InverseProperty(nameof(WorkExperience.User))]
         public ICollection<WorkExperience> WorkExperiences { get; set; }

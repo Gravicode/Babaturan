@@ -1,7 +1,15 @@
 ﻿@page "/settings"
 @inject NavigationManager NavMgr
-@inject IJSRuntime IJS
+
+@inject IJSRuntime jsRuntime
+@using Babaturan.Tools
+@using Babaturan.Models
+@using Babaturan.Data
+@inject NavigationManager NavMgr
+@inject AzureBlobHelper AzureBlobHelper
 @inject IToastService toastService
+@inject UserProfileService service
+
 <main>
     <!-- Container START -->
     <div class="container">
@@ -70,22 +78,22 @@
                         <!-- Helper link START -->
                         <ul class="nav small mt-4 justify-content-center lh-1">
                             <li class="nav-item">
-                                <a class="nav-link" href="my-profile-about.html">About</a>
+                                <a class="nav-link" href="my-profile-about">About</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="settings.html">Settings</a>
+                                <a class="nav-link" href="settings">Settings</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" target="_blank" href="https://support.webestica.com/login">Support </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" target="_blank" href="docs/index.html">Docs </a>
+                                <a class="nav-link" target="_blank" href="docs/index">Docs </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="help.html">Help</a>
+                                <a class="nav-link" href="help">Help</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="privacy-and-terms.html">Privacy & terms</a>
+                                <a class="nav-link" href="privacy-and-terms">Privacy & terms</a>
                             </li>
                         </ul>
                         <!-- Helper link END -->
@@ -109,7 +117,7 @@
                             <!-- Title START -->
                             <div class="card-header border-0 pb-0">
                                 <h1 class="h5 card-title">Account Settings</h1>
-                                <p class="mb-0">He moonlights difficult engrossed it, sportsmen. Interested has all Devonshire difficulty gay assistance joy. Unaffected at ye of compliment alteration to.</p>
+                                <p class="mb-0">Lengkapi data personal kamu.</p>
                             </div>
                             <!-- Card header START -->
                             <!-- Card body START -->
@@ -118,61 +126,74 @@
                                 <form class="row g-3">
                                     <!-- First name -->
                                     <div class="col-sm-6 col-lg-4">
-                                        <label class="form-label">First name</label>
-                                        <input type="text" class="form-control" placeholder="" value="Sam">
+                                        <label class="form-label">Nama Depan</label>
+                                        <input type="text" class="form-control" placeholder="" @bind="DataUser.FirstName">
                                     </div>
                                     <!-- Last name -->
                                     <div class="col-sm-6 col-lg-4">
-                                        <label class="form-label">Last name</label>
-                                        <input type="text" class="form-control" placeholder="" value="Lanson">
+                                        <label class="form-label">Nama Belakang</label>
+                                        <input type="text" class="form-control" placeholder="" @bind="DataUser.LastName">
                                     </div>
                                     <!-- Additional name -->
                                     <div class="col-sm-6 col-lg-4">
-                                        <label class="form-label">Additional name</label>
-                                        <input type="text" class="form-control" placeholder="">
+                                        <label class="form-label">Pekerjaan</label>
+                                        <input type="text" class="form-control" @bind="DataUser.Job" placeholder="">
                                     </div>
                                     <!-- User name -->
                                     <div class="col-sm-6">
-                                        <label class="form-label">User name</label>
-                                        <input type="text" class="form-control" placeholder="" value="@("@samlanson")">
+                                        <label class="form-label">Alamat</label>
+                                        <input type="text" class="form-control" placeholder="" @bind="DataUser.Alamat">
                                     </div>
                                     <!-- Birthday -->
                                     <div class="col-lg-6">
-                                        <label class="form-label">Birthday </label>
-                                        <input type="text" class="form-control flatpickr" value="12/12/1990">
+                                        <label class="form-label">Tanggal Lahir </label>
+                                        <input type="date" class="form-control flatpickr" @bind="DataUser.BirthDate">
                                     </div>
                                     <!-- Allow checkbox -->
                                     <div class="col-12">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" value="" id="allowChecked" checked>
                                             <label class="form-check-label" for="allowChecked">
-                                                Allow anyone to add you to their team
+                                                Semua orang bisa tambah saya sebagai teman
                                             </label>
                                         </div>
                                     </div>
                                     <!-- Phone number -->
                                     <div class="col-sm-6">
                                         <label class="form-label">Phone number</label>
-                                        <input type="text" class="form-control" placeholder="" value="(678) 324-1251">
+                                        <input type="tel" class="form-control" placeholder="(678) 324-1251" @bind="DataUser.Phone">
                                         <!-- Add new number -->
-                                        <a class="btn btn-sm btn-dashed rounded mt-2" href="#!"> <i class="bi bi-plus-circle-dotted me-1"></i>Add new phone number</a>
+                                        <a style="display:none" class="btn btn-sm btn-dashed rounded mt-2" href="#!"> <i class="bi bi-plus-circle-dotted me-1"></i>Add new phone number</a>
                                     </div>
                                     <!-- Phone number -->
                                     <div class="col-sm-6">
                                         <label class="form-label">Email</label>
-                                        <input type="text" class="form-control" placeholder="" value="sam@webestica.com">
+                                        <input type="email" class="form-control" placeholder="" @bind="DataUser.Email">
                                         <!-- Add new email -->
-                                        <a class="btn btn-sm btn-dashed rounded mt-2" href="#!"> <i class="bi bi-plus-circle-dotted me-1"></i>Add new email address</a>
+                                        <a style="display:none" class="btn btn-sm btn-dashed rounded mt-2" href="#!"> <i class="bi bi-plus-circle-dotted me-1"></i>Add new email address</a>
                                     </div>
                                     <!-- Page information -->
                                     <div class="col-12">
-                                        <label class="form-label">Overview</label>
-                                        <textarea class="form-control" rows="4" placeholder="Description (Required)">Interested has all Devonshire difficulty gay assistance joy. Handsome met debating sir dwelling age material. As style lived he worse dried. Offered related so visitors we private removed. Moderate do subjects to distance.</textarea>
+                                        <label class="form-label">Tentang Saya</label>
+                                        <textarea class="form-control" @bind="DataUser.AboutMe" rows="4" placeholder="Description (Required)"></textarea>
                                         <small>Character limit: 300</small>
                                     </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Foto Saya</label>
+                                        @if (string.IsNullOrEmpty(DataUser?.PicUrl))
+                                        {
+                                            <p>Gambar belum di upload.</p>
+                                        }
+                                        else
+                                        {
+                                            <img alt="#" @onclick="(()=>PrepareUpload())" src="@(DataUser.PicUrl)" class="rounded-circle me-3">
+                                        }
+                                        <InputFile id="fileInput1" accept="image/*" OnChange="UploadFiles" />
+                                    </div>
+                                 
                                     <!-- Button  -->
                                     <div class="col-12 text-end">
-                                        <button type="submit" class="btn btn-sm btn-primary mb-0">Save changes</button>
+                                        <button type="button" class="btn btn-sm btn-primary mb-0" @onclick="Simpan">Simpan</button>
                                     </div>
                                 </form>
                                 <!-- Settings END -->
@@ -184,8 +205,8 @@
                         <div class="card">
                             <!-- Title START -->
                             <div class="card-header border-0 pb-0">
-                                <h5 class="card-title">Change your password</h5>
-                                <p class="mb-0">See resolved goodness felicity shy civility domestic had but.</p>
+                                <h5 class="card-title">Ubah password</h5>
+                                <p class="mb-0">Form ini untuk ubah existing password.</p>
                             </div>
                             <!-- Title START -->
                             <div class="card-body">
@@ -193,31 +214,18 @@
                                 <form class="row g-3">
                                     <!-- Current password -->
                                     <div class="col-12">
-                                        <label class="form-label">Current password</label>
-                                        <input type="text" class="form-control" placeholder="">
+                                        <label class="form-label">Password</label>
+                                        <input type="password" @bind="DataUser.Password" class="form-control" placeholder="">
                                     </div>
-                                    <!-- New password -->
-                                    <div class="col-12">
-                                        <label class="form-label">New password</label>
-                                        <!-- Input group -->
-                                        <div class="input-group">
-                                            <input class="form-control fakepassword" type="password" id="psw-input" placeholder="Enter new password">
-                                            <span class="input-group-text p-0">
-                                                <i class="fakepasswordicon fa-solid fa-eye-slash cursor-pointer p-2 w-40px"></i>
-                                            </span>
-                                        </div>
-                                        <!-- Pswmeter -->
-                                        <div id="pswmeter" class="mt-2"></div>
-                                        <div id="pswmeter-message" class="rounded mt-1"></div>
-                                    </div>
+                                   
                                     <!-- Confirm password -->
                                     <div class="col-12">
-                                        <label class="form-label">Confirm password</label>
-                                        <input type="text" class="form-control" placeholder="">
+                                        <label class="form-label">Ulang password</label>
+                                        <input type="password"  @bind="RetypePass" class="form-control" placeholder="">
                                     </div>
                                     <!-- Button  -->
                                     <div class="col-12 text-end">
-                                        <button type="submit" class="btn btn-primary mb-0">Update password</button>
+                                        <button type="button" @onclick="Simpan" class="btn btn-primary mb-0">Update password</button>
                                     </div>
                                 </form>
                                 <!-- Settings END -->
@@ -770,6 +778,126 @@
     <!-- Container END -->
 
 </main>
-@code {
 
+@code {
+    string GenderStr;
+    UserProfile DataUser = new UserProfile();
+
+    string RetypePass;
+    string ErrorMsg = string.Empty;
+    bool RegisterSuccess = false;
+    Encryption enc;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+    private void OnChange(ChangeEventArgs args)
+    {
+        GenderStr = args.Value.ToString();
+    }
+    async Task PrepareUpload()
+    {
+        await jsRuntime.InvokeVoidAsync("OpenFileUpload", "fileInput1");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        enc = new Encryption();
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            DataUser = service.GetItemByUsername(UserName);
+            DataUser.Password = enc.Decrypt(DataUser.Password);
+        }
+
+
+    }
+    void Simpan()
+    {
+        ErrorMsg = "";
+
+
+        if (string.IsNullOrEmpty(DataUser.Password))
+        {
+            ErrorMsg += "Tolong di isi password. ";
+
+        }
+        if (string.IsNullOrEmpty(DataUser.Phone))
+        {
+            ErrorMsg += "Tolong di isi no hp. ";
+
+        }
+        if (string.IsNullOrEmpty(DataUser.FirstName))
+        {
+            ErrorMsg += "Tolong di isi nama depan. ";
+
+        }
+        if (string.IsNullOrEmpty(DataUser.LastName))
+        {
+            ErrorMsg += "Tolong di isi nama belakang. ";
+
+        }
+        if (string.IsNullOrEmpty(DataUser.Alamat))
+        {
+            ErrorMsg += "Tolong di isi alamat. ";
+
+        } 
+        if (string.IsNullOrEmpty(DataUser.AboutMe))
+        {
+            ErrorMsg += "Tolong di isi info tentang kamu. ";
+
+        }
+        if (string.IsNullOrEmpty(DataUser.Job))
+        {
+            ErrorMsg += "Tolong di isi pekerjaan kamu. ";
+
+        }
+        if (DataUser.Password != RetypePass)
+        {
+            ErrorMsg += "Password tidak sesuai dengan ulang password. ";
+
+        }
+
+        if (ErrorMsg.Length > 0)
+        {
+            toastService.ShowWarning(ErrorMsg, "Perhatian");
+            return;
+        }
+        DataUser.FullName = $"{DataUser.FirstName} {DataUser.LastName}";
+        if (GenderStr != null)
+            DataUser.Gender = GenderStr[0];
+        DataUser.Password = enc.Encrypt(DataUser.Password);
+        if (service.UpdateData(DataUser))
+        {
+            toastService.ShowSuccess("Profile Anda sudah berhasil di update. Nuhun", "Info");
+        }
+        else
+        {
+            toastService.ShowError("Gagal save profile");
+        }
+    }
+
+    void Kembali()
+    {
+        NavMgr.NavigateTo("/");
+    }
+
+    private async Task UploadFiles(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            var ms = new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(ms);
+            var bytes = ImageHelper.FixedSize(ms, 250, 250, false);
+            string newName = string.Empty;
+
+            newName = $"profile_{(string.IsNullOrEmpty(DataUser.Username) ? "rojul" : DataUser.Username)}_{DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss")}_{file.Name}";
+            var FileUrl = $"{AppConstants.UploadUrlPrefix}{newName}";
+            await AzureBlobHelper.UploadFile(newName, bytes);
+            DataUser.PicUrl = FileUrl;
+
+        }
+    }
 }

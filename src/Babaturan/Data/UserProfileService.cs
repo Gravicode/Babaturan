@@ -49,13 +49,23 @@ namespace Babaturan.Data
         public UserProfile GetItemByUsername(string UName)
         {
             if (string.IsNullOrEmpty(UName)) return null;
-            var selItem = db.UserProfiles.Where(x => x.Username.ToLower() == UName.ToLower()).FirstOrDefault();
+            var qry = db.UserProfiles.Where(x => x.Username.ToLower() == UName.ToLower());
+            var selItem = qry.FirstOrDefault();
+            return selItem;
+        } 
+        
+        public UserProfile GetItemByUsernameFull(string UName)
+        {
+            if (string.IsNullOrEmpty(UName)) return null;
+            var qry = db.UserProfiles.Include(c=>c.Posts).Include(c=>c.FollowedBy).Include(c=>c.Follows).Where(x => x.Username.ToLower() == UName.ToLower());
+            var selItem = qry.FirstOrDefault();
             return selItem;
         }
         public UserProfile GetItemByEmail(string Email)
         {
             if (string.IsNullOrEmpty(Email)) return null;
-            var selItem = db.UserProfiles.Where(x => x.Email.ToLower() == Email.ToLower()).FirstOrDefault();
+            var qry = db.UserProfiles.Where(x => x.Email.ToLower() == Email.ToLower());
+            var selItem = qry.FirstOrDefault();
             return selItem;
         }
         public Roles GetUserRole(string Email)
