@@ -50,6 +50,7 @@ builder.Services.AddTransient<NotificationService>();
 builder.Services.AddTransient<PostCommentService>();
 builder.Services.AddTransient<PostService>();
 builder.Services.AddTransient<PostLikeService>();
+builder.Services.AddTransient<PostDislikeService>();
 builder.Services.AddTransient<RepostService>();
 builder.Services.AddTransient<FollowService>();
 builder.Services.AddTransient<TrendingService>();
@@ -59,6 +60,22 @@ builder.Services.AddTransient<MessageDetailService>();
 builder.Services.AddTransient<MessageAttachmentService>();
 builder.Services.AddTransient<PageViewService>();
 builder.Services.AddTransient<FriendRequestService>();
+
+builder.Services.AddTransient<CommentLikeService>();
+builder.Services.AddTransient<UserGroupService>();
+builder.Services.AddTransient<CustomGroupService>();
+builder.Services.AddTransient<CustomPageService>();
+builder.Services.AddTransient<BlogService>();
+builder.Services.AddTransient<BlogCommentService>();
+builder.Services.AddTransient<MyActivityService>();
+builder.Services.AddTransient<PictureAlbumService>();
+builder.Services.AddTransient<PicturePostService>();
+builder.Services.AddTransient<PostViewService>();
+builder.Services.AddTransient<ReportPostService>();
+builder.Services.AddTransient<BlockedPostService>();
+builder.Services.AddTransient<HidePostService>();
+builder.Services.AddTransient<SavedPostService>();
+builder.Services.AddTransient<PostStoryService>();
 //builder.Services.AddEntityFrameworkMySqlJsonMicrosoft();
 builder.Services.AddCors(options =>
 {

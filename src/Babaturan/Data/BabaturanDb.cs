@@ -19,6 +19,7 @@ namespace Babaturan.Data
             : base(options)
         {
         }
+        public DbSet<CommentLike> CommentLikes { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<CustomGroup> CustomGroups { get; set; }
         public DbSet<CustomPage> CustomPages { get; set; }
