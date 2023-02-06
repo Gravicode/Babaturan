@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Babaturan.Helpers;
+using Microsoft.Extensions.Options;
 
 namespace Babaturan.Data
 {
@@ -19,6 +22,7 @@ namespace Babaturan.Data
             : base(options)
         {
         }
+        //public DbSet<Author> Authors { get; set; }
         public DbSet<CommentLike> CommentLikes { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<CustomGroup> CustomGroups { get; set; }
@@ -52,19 +56,35 @@ namespace Babaturan.Data
         public DbSet<MessageHeader> MessageHeaders { get; set; }
         public DbSet<MessageDetail> MessageDetails { get; set; }
         public DbSet<MessageAttachment> MessageAttachments { get; set; }
-
+       
         protected override void OnModelCreating(ModelBuilder builder)
         {
+           
+            //builder.Entity<Author>()
+            //.Property(b => b.Contact)
+            //.HasColumnType("LONGTEXT")
+            //.HasJsonConversion<ContactDetails>();
 
+            builder.Entity<Post>()
+            .Property(b => b.Location)
+            .HasColumnType("LONGTEXT")
+            .HasJsonConversion<PostLocation?>();
+
+            builder.Entity<Post>()
+           .Property(b => b.Video)
+           .HasColumnType("LONGTEXT")
+           .HasJsonConversion<PostVideo?>();
+
+            builder.Entity<Post>()
+           .Property(b => b.Event)
+           .HasColumnType("LONGTEXT")
+           .HasJsonConversion<PostEvent?>();
+
+            builder.Entity<PostStory>()
+          .Property(b => b.ListMedia)
+          .HasColumnType("LONGTEXT")
+          .HasJsonConversion<List<StoryMedia>?>();
             /*
-            builder.Entity<DataEventRecord>().HasKey(m => m.DataEventRecordId);
-            builder.Entity<SourceInfo>().HasKey(m => m.SourceInfoId);
-
-            // shadow properties
-            builder.Entity<DataEventRecord>().Property<DateTime>("UpdatedTimestamp");
-            builder.Entity<SourceInfo>().Property<DateTime>("UpdatedTimestamp");
-            */
-            //builder.Ignore<Post>();
             builder.Entity<Post>().OwnsOne(x => x.Location, y => { y.ToJson(); });
             builder.Entity<Post>().OwnsOne(x => x.Video, y => { y.ToJson(); });
             
@@ -91,6 +111,7 @@ namespace Babaturan.Data
                    ownedNavigationBuilder.OwnsMany(_ => _.Comments);
                }
               );
+            */
             base.OnModelCreating(builder);
         }
 
@@ -106,6 +127,7 @@ namespace Babaturan.Data
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+          
             if (!optionsBuilder.IsConfigured)
             {
                 optionsBuilder.UseMySql(AppConstants.SQLConn,ServerVersion.AutoDetect(AppConstants.SQLConn),options=>options.UseMicrosoftJson());

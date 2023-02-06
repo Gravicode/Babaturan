@@ -1,4 +1,5 @@
 ﻿@page "/register"
+
 @inject IJSRuntime IJS
 @inject NavigationManager NavMgr
 @inject IToastService toastService
@@ -380,31 +381,31 @@
                         <!-- Form START -->
                         <form class="mt-4">
                              <div class="mb-3 input-group-lg">
-                                <input type="email" @bind="DataUser.Email" class="form-control" placeholder="Masukan email">
+                                <input type="email" id="email" @bind="DataUser.Email" class="form-control" placeholder="Masukan email">
                                 <small>Email Anda.</small>
                             </div>
                              <div class="mb-3 input-group-lg">
-                                <input type="text" class="form-control" @bind="DataUser.FirstName" placeholder="Masukan nama depan">
+                                <input type="text" id="first-name" class="form-control" @bind="DataUser.FirstName" placeholder="Masukan nama depan">
                                 <small>Masukan nama depan.</small>
                             </div>
                              <div class="mb-3 input-group-lg">
-                                <input type="text" class="form-control" @bind="DataUser.LastName" placeholder="Masukan nama belakang">
+                                <input type="text" id="last-name" class="form-control" @bind="DataUser.LastName" placeholder="Masukan nama belakang">
                                 <small>Masukan nama belakang.</small>
                             </div>
                              <div class="mb-3 input-group-lg">
-                                <input type="text" class="form-control"  @bind="DataUser.Phone" placeholder="Masukan telepon">
+                                <input type="text" id="phone" class="form-control"  @bind="DataUser.Phone" placeholder="Masukan telepon">
                                 <small>Masukan telepon.</small>
                             </div>
                              <div class="mb-3 input-group-lg">
-                                <input type="text" class="form-control" @bind="DataUser.Alamat" placeholder="Masukan alamat">
+                                <input type="text" id="address" class="form-control" @bind="DataUser.Alamat" placeholder="Masukan alamat">
                                 <small>Masukan alamat.</small>
-                            </div>
+                            </div
                              <div class="mb-3 input-group-lg">
                                 <img src="@CaptchaImage" style="text-align:center;margin-bottom:5px;mr-1;mb-1">
                                 <button @onclick="GenerateCaptcha" @onclick:preventDefault class="btn btn-success mb-1">Change</button>
                             </div>
                             <div class="mb-3 input-group-lg">
-                                <input type="text" class="form-control" @bind="TypedCaptcha" placeholder="Masukan captcha">
+                                <input type="text" id="captcha" class="form-control" @bind="TypedCaptcha" placeholder="Masukan captcha">
                                 <small>Masukan captcha.</small>
                             </div>
                             

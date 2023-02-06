@@ -190,6 +190,9 @@ app.MapFallbackToPage("/_Host");
 
 var db = new BabaturanDB();
 db.Database.EnsureCreated();
-
-
+/*
+var newItem = new Author() { Name="asep", Contact = new ContactDetails() { Address=new Address() { City="bogor" , Country="ID", Postcode="123124", Street="Jl Otong"}, Phone = "038432543" } };
+db.Authors.Add(newItem);
+db.SaveChanges();
+*/
 app.Run();

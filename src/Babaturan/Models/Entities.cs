@@ -1,6 +1,8 @@
 ﻿using GemBox.Document;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.Design;
@@ -8,6 +10,54 @@ using System.Reflection;
 
 namespace Babaturan.Models
 {
+    /*
+    #region sample
+    public class ContactDetails
+    {
+        public Address Address { get; set; } = null!;
+        public string? Phone { get; set; }
+    }
+
+    public class Address
+    {
+        public Address()
+        {
+            
+        }
+        public Address(string street, string city, string postcode, string country)
+        {
+            Street = street;
+            City = city;
+            Postcode = postcode;
+            Country = country;
+        }
+
+        public string Street { get; set; }
+        public string City { get; set; }
+        public string Postcode { get; set; }
+        public string Country { get; set; }
+    }
+    public class Author
+    {
+        public Author()
+        {
+            
+        }
+        public Author(string name)
+        {
+            Name = name;
+        }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Key, Column(Order = 0)]
+        public int Id { get; private set; }
+        public string Name { get; set; }
+        //public ContactDetails Contact { get; set; } = null!;
+        public ContactDetails Contact { get; set; }
+        
+        public List<Post> Posts { get; } = new();
+    }
+    #endregion
+    */
     #region helpers model  
     public class StorageObject
     {
