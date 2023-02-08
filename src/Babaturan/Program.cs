@@ -76,6 +76,8 @@ builder.Services.AddTransient<BlockedPostService>();
 builder.Services.AddTransient<HidePostService>();
 builder.Services.AddTransient<SavedPostService>();
 builder.Services.AddTransient<PostStoryService>();
+builder.Services.AddSingleton<AppState>();
+
 //builder.Services.AddEntityFrameworkMySqlJsonMicrosoft();
 builder.Services.AddCors(options =>
 {

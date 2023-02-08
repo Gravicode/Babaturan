@@ -1,6 +1,7 @@
 ﻿@page "/"
 @page "/index"
 @inject UserProfileService UserSvc
+@inject AppState AppState
 <PageTitle>Babaturan - Tempat bersosial yang sehat dan menyenangkan</PageTitle>
 <main>
 
@@ -239,7 +240,7 @@
             </div>
             <!-- Post input -->
             <form class="w-100">
-              <textarea class="form-control pe-4 border-0" rows="2" data-autoresize placeholder="Share your thoughts..."></textarea>
+              <textarea class="form-control pe-4 border-0" rows="2" data-autoresize placeholder="Share your thoughts..." data-bs-toggle="modal" data-bs-target="#modalCreateFeed"></textarea>
             </form>
           </div>
           <!-- Share feed toolbar START -->
@@ -254,7 +255,7 @@
               <a href="#" class="nav-link bg-light py-1 px-2 mb-0" data-bs-toggle="modal" data-bs-target="#modalCreateEvents"> <i class="bi bi-calendar2-event-fill text-danger pe-2"></i>Event </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link bg-light py-1 px-2 mb-0" href="#!" data-bs-toggle="modal" data-bs-target="#modalCreateFeed"> <i class="bi bi-emoji-smile-fill text-warning pe-2"></i>Feeling /Activity</a>
+              <a class="nav-link bg-light py-1 px-2 mb-0" href="#!" @onclick="CreateNewPost" data-bs-toggle="modal" data-bs-target="#modalCreateFeed"> <i class="bi bi-emoji-smile-fill text-warning pe-2"></i>Feeling /Activity</a>
             </li>
             <li class="nav-item dropdown ms-lg-auto">
               <a class="nav-link bg-light py-1 px-2 mb-0" href="#" id="feedActionShare" data-bs-toggle="dropdown" aria-expanded="false">
@@ -1742,4 +1743,9 @@
         }
         
     }
+
+    async Task CreateNewPost()
+{
+        AppState.CreateNewPost(SelUser.Username);
+}
 }

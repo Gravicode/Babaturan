@@ -48,23 +48,23 @@
 <body>
 
     @RenderBody()
-   
+
     <!-- ======================= JS libraries, plugins and custom scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
-	<!-- Bootstrap JS -->
-	<script src="assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Vendors -->
+    <script src="assets/vendor/tiny-slider/dist/tiny-slider.js"></script>
+    <script src="assets/vendor/OverlayScrollbars-master/js/OverlayScrollbars.min.js"></script>
+    <script src="assets/vendor/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script src="assets/vendor/glightbox-master/dist/js/glightbox.min.js"></script>
+    <script src="assets/vendor/flatpickr/dist/flatpickr.min.js"></script>
+    <script src="assets/vendor/plyr/plyr.js"></script>
+    <script src="assets/vendor/dropzone/dist/min/dropzone.min.js"></script>
 
-	<!-- Vendors -->
-	<script src="assets/vendor/tiny-slider/dist/tiny-slider.js"></script>
-	<script src="assets/vendor/OverlayScrollbars-master/js/OverlayScrollbars.min.js"></script>
-	<script src="assets/vendor/choices.js/public/assets/scripts/choices.min.js"></script>
-	<script src="assets/vendor/glightbox-master/dist/js/glightbox.min.js"></script>
-	<script src="assets/vendor/flatpickr/dist/flatpickr.min.js"></script>
-	<script src="assets/vendor/plyr/plyr.js"></script>
-	<script src="assets/vendor/dropzone/dist/min/dropzone.min.js"></script>
-
-	<!-- Template Functions -->
-	<script src="assets/js/functions.js"></script>
+    <!-- Template Functions -->
+    <script src="assets/js/functions.js"></script>
 
     <script type="module" src="js/webcam.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js" integrity="sha512-s/XK4vYVXTGeUSv4bRPOuxSDmDlTedEpMEcAQk0t/FMd9V6ft8iXdwSBxV0eD60c6w/tjotSlKu9J2AAW1ckTA==" crossorigin="anonymous"></script>
@@ -82,10 +82,9 @@
     <script src="js/custom.js"></script>
     <!-- Page level custom scripts -->
 
-    <script>
-        function OpenFileUpload(uploadid) {
-           
-            $('#'+uploadid+':hidden').trigger('click');
+    <script>function OpenFileUpload(uploadid) {
+
+            $('#' + uploadid + ':hidden').trigger('click');
         }
         function OpenUrl(url) {
             window.location = url;
@@ -133,8 +132,7 @@
                 var topPosition = $(".table_container").scrollTop();
                 $(table + " thead tr th").css({ "top": (topPosition) });
             });
-        }
-    </script>
+        }</script>
 
     <script src="_framework/blazor.server.js"></script>
 </body>
