@@ -142,7 +142,7 @@ namespace Babaturan.Data
         {
             if (string.IsNullOrEmpty(Username))
             {
-                var data = from x in db.Posts.Include(c => c.PostComments).Include(c => c.PostLikes).Include(c => c.User).Include(c=>c.Reposts)
+                var data = from x in db.Posts.AsNoTracking().Include(c => c.PostComments).ThenInclude(c=>c.CommentLikes).Include(c => c.PostComments).ThenInclude(c => c.User).Include(c => c.PostLikes).Include(c => c.User).Include(c=>c.Reposts)
                            
                            orderby x.Id descending
                            select x;
@@ -150,12 +150,12 @@ namespace Babaturan.Data
             }
             else
             {
-                var data = from x in db.Posts.Include(c => c.PostComments).Include(c => c.PostLikes).Include(c => c.User)
+                var data = from x in db.Posts.AsNoTracking().Include(c => c.PostComments).ThenInclude(c => c.CommentLikes).Include(c => c.PostComments).ThenInclude(c => c.User).Include(c => c.PostLikes).Include(c => c.User).Include(c => c.Reposts)
                            where x.UserName == Username
                            orderby x.Id descending
                            select x;
                 var followedUser = db.Follows.Where(x => x.UserName == Username).Select(x => x.FollowUserId).ToList();
-                var data2 = from x in db.Posts.Include(c => c.PostComments).Include(c => c.PostLikes).Include(c => c.User)
+                var data2 = from x in db.Posts.AsNoTracking().Include(c => c.PostComments).ThenInclude(c => c.CommentLikes).Include(c => c.PostComments).ThenInclude(c => c.User).Include(c => c.PostLikes).Include(c => c.User).Include(c => c.Reposts)
                             where followedUser.Contains(x.UserId)
                             orderby x.Id descending
                             select x;

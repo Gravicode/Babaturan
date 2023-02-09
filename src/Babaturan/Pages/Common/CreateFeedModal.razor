@@ -250,11 +250,11 @@
                     }
 
 
-                    byte[] bytes = null;
+                    byte[] bytes = ms.ToArray();
 
                     if (TipeUpload == UploadTypes.Video)
                     {
-                        bytes = ms.ToArray();
+                        
                         //get thumbnail
                         try
                         {
@@ -296,7 +296,8 @@
                     }
                     else
                     {
-                        bytes = ImageHelper.FixedSize(ms, 800, 600, false);
+                        var resized = SKiaImageHelper.Resize(bytes, 800, 600);
+                        bytes = resized.FileContents;
                     }
 
                     string newName = string.Empty;

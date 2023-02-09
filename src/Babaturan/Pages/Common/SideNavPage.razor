@@ -1,5 +1,6 @@
 ﻿@inject UserProfileService UserSvc
-
+@inject AppState AppState
+@implements IDisposable
 
 <div class="col-lg-3">
 
@@ -143,12 +144,27 @@
 
         if (user.Identity.IsAuthenticated)
         {
-            UserName = user.Identity.Name;
-            SelUser = UserSvc.GetItemByUsernameFull(UserName);
+            UserName = user.Identity.Name;            
             HasLogin = true;
+            Refresh();
         }
-
+        AppState.OnPostChange += PostRefresh;
     }
 
+    void Refresh()
+    {
+        SelUser = UserSvc.GetItemByUsernameFull(UserName);
+    }
+    void PostRefresh(string Username)
+    {
+        if (Username == SelUser.Username){
+            Refresh();
+            StateHasChanged();
+        }
+    }
+    void IDisposable.Dispose()
+    {
+        AppState.OnPostChange -= PostRefresh;
+    }
 }
 

@@ -3,6 +3,8 @@
 @inject UserProfileService UserSvc
 @inject IToastService toastService
 @inject PostCommentService CommentSvc 
+@inject AppState AppState
+@implements IDisposable
 @if (ListPost != null)
     @foreach (var post in ListPost)
     {
@@ -69,7 +71,8 @@
                 <!-- Feed react START -->
                 <ul class="nav nav-stack py-3 small">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#!"> <i class="bi bi-hand-thumbs-up-fill pe-1"></i>Liked (@post.PostLikes.Count.ToString("n0"))</a>
+                        
+                        <a class="nav-link active" @onclick:preventDefault @onclick="(() => TogglePostLike(post, LikeList[post.Id]))" href="#!"> <i class="bi bi-hand-thumbs-up-fill pe-1"></i>Liked (@post.PostLikes.Count.ToString("n0"))</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#!"> <i class="bi bi-chat-fill pe-1"></i>Comments (@post.PostComments.Count.ToString("n0"))</a>
@@ -100,14 +103,14 @@
                     </div>
                     <!-- Comment box  -->
                     <form class="w-100">
-                        <textarea @bind="NewComments[post.Id]" @onkeyup="SendComment" @onfocus="@( () => SetCommentFocus(post.Id) )"  data-autoresize class="form-control pe-4 bg-light" rows="1" placeholder="Add a comment..."></textarea>
+                        <textarea @bind-value="NewComments[post.Id]" @bind-value:event="oninput" @onkeyup="SendComment" @onfocus="@( () => SetCommentFocus(post.Id) )" data-autoresize class="form-control pe-4 bg-light" rows="1" placeholder="Add a comment..."></textarea>
                     </form>
                 </div>
                 <!-- Comment wrap START -->
                 <ul class="comment-wrap list-unstyled">
                     @if (post.PostComments != null)
                     {
-                        @foreach (var comment in post.PostComments)
+                        @foreach (var comment in post.PostComments.OrderByDescending(x=>x.Id))
                         {
 
                             <!-- Comment item START -->
@@ -129,7 +132,7 @@
                                         <!-- Comment react -->
                                         <ul class="nav nav-divider py-2 small">
                                             <li class="nav-item">
-                                                <a class="nav-link" href="#!"> Like (@comment.CommentLikes.Count)</a>
+                                                <a class="nav-link" @onclick:preventDefault @onclick="(() => ToggleCommentLike(comment, CommentLikeList[comment.Id]))" href="#!"> Like (@comment.CommentLikes.Count)</a>
                                             </li>                                                                                       
                                         </ul>
                                     </div>
@@ -172,10 +175,20 @@
     public MainLayout Layout { get; set; }
     [Parameter]
     public string UserName { get; set; }
-
+    void PostRefresh(string Username)
+    {
+        if(Username == selUser.Username)
+            Refresh();
+        //StateHasChanged();
+    }
+    void IDisposable.Dispose()
+    {
+        AppState.OnPostChange -= PostRefresh;
+    }
     public List<Post> ListPost { get; set; }
     Dictionary<long, string> NewComments = new();
     Dictionary<long, bool> LikeList = new();
+    Dictionary<long, bool> CommentLikeList = new();
     long ActivePostId = -1;
     async Task SetCommentFocus(long PostId)
     {
@@ -220,6 +233,21 @@
 
 
     }
+    async Task ToggleCommentLike(PostComment comment, bool Like)
+    {
+        Like = !Like;
+        if (Like)
+        {
+            CommentSvc.LikeComment(selUser.Id, selUser.Username, comment.Id);
+        }
+        else
+        {
+            CommentSvc.UnLikeComment(selUser.Id, comment.Id);
+        }
+        CommentLikeList[comment.Id] = Like;
+        Refresh();
+
+    }
 
     async Task TogglePostLike(Post post, bool Like)
     {
@@ -233,6 +261,7 @@
             PostSvc.UnLikePost(selUser.Id, post.Id);
         }
         LikeList[post.Id] = Like;
+        Refresh();
     }
 
     public void Refresh()
@@ -251,6 +280,7 @@
                     if (!string.IsNullOrEmpty(Username))
                     {
                         LikeList.Clear();
+                        CommentLikeList.Clear();
                         ListPost.ForEach(x =>
                         {
                             if (x.PostLikes != null)
@@ -260,6 +290,18 @@
                             else
                             {
                                 LikeList.Add(x.Id, false);
+                            }
+                            if(x.PostComments!=null)
+                            foreach(var c in x.PostComments)
+                            {
+                                    if (c.CommentLikes != null)
+                                    {
+                                        CommentLikeList.Add(c.Id, c.CommentLikes.Any(c => c.LikedByUserId == selUser.Id));
+                                    }
+                                    else
+                                    {
+                                        CommentLikeList.Add(c.Id, false);
+                                    }
                             }
                         });
 
@@ -272,6 +314,7 @@
                     if (!string.IsNullOrEmpty(Username))
                     {
                         LikeList.Clear();
+                        CommentLikeList.Clear();
                         ListPost.ForEach(x =>
                         {
                             if (x.PostLikes != null)
@@ -282,6 +325,18 @@
                             {
                                 LikeList.Add(x.Id, false);
                             }
+                            if (x.PostComments != null)
+                                foreach (var c in x.PostComments)
+                                {
+                                    if (c.CommentLikes != null)
+                                    {
+                                        CommentLikeList.Add(c.Id, c.CommentLikes.Any(c => c.LikedByUserId == selUser.Id));
+                                    }
+                                    else
+                                    {
+                                        CommentLikeList.Add(c.Id, false);
+                                    }
+                                }
                         });
 
                     }
@@ -293,6 +348,7 @@
                     if (!string.IsNullOrEmpty(Username))
                     {
                         LikeList.Clear();
+                        CommentLikeList.Clear();
                         ListPost.ForEach(x =>
                         {
                             if (x.PostLikes != null)
@@ -305,6 +361,18 @@
                                 if (!LikeList.ContainsKey(x.Id))
                                     LikeList.Add(x.Id, false);
                             }
+                            if (x.PostComments != null)
+                                foreach (var c in x.PostComments)
+                                {
+                                    if (c.CommentLikes != null)
+                                    {
+                                        CommentLikeList.Add(c.Id, c.CommentLikes.Any(c => c.LikedByUserId == selUser.Id));
+                                    }
+                                    else
+                                    {
+                                        CommentLikeList.Add(c.Id, false);
+                                    }
+                                }
                         });
 
                     }
@@ -316,6 +384,7 @@
                     if (!string.IsNullOrEmpty(Username))
                     {
                         LikeList.Clear();
+                        CommentLikeList.Clear();
                         ListPost.ForEach(x =>
                         {
                             if (x.PostLikes != null)
@@ -328,6 +397,18 @@
                                 if (!LikeList.ContainsKey(x.Id))
                                     LikeList.Add(x.Id, false);
                             }
+                            if (x.PostComments != null)
+                                foreach (var c in x.PostComments)
+                                {
+                                    if (c.CommentLikes != null)
+                                    {
+                                        CommentLikeList.Add(c.Id, c.CommentLikes.Any(c => c.LikedByUserId == selUser.Id));
+                                    }
+                                    else
+                                    {
+                                        CommentLikeList.Add(c.Id, false);
+                                    }
+                                }
                         });
 
                     }
@@ -339,6 +420,7 @@
                     if (!string.IsNullOrEmpty(Username))
                     {
                         LikeList.Clear();
+                        CommentLikeList.Clear();
                         ListPost.ForEach(x =>
                         {
                             if (x.PostLikes != null)
@@ -351,6 +433,18 @@
                                 if (!LikeList.ContainsKey(x.Id))
                                     LikeList.Add(x.Id, false);
                             }
+                            if (x.PostComments != null)
+                                foreach (var c in x.PostComments)
+                                {
+                                    if (c.CommentLikes != null)
+                                    {
+                                        CommentLikeList.Add(c.Id, c.CommentLikes.Any(c => c.LikedByUserId == selUser.Id));
+                                    }
+                                    else
+                                    {
+                                        CommentLikeList.Add(c.Id, false);
+                                    }
+                                }
                         });
 
                     }
@@ -365,6 +459,7 @@
                     if (!string.IsNullOrEmpty(Username))
                     {
                         LikeList.Clear();
+                        CommentLikeList.Clear();
                         ListPost.ForEach(x =>
                         {
                             if (x.PostLikes != null)
@@ -377,7 +472,20 @@
                                 if (!LikeList.ContainsKey(x.Id))
                                     LikeList.Add(x.Id, false);
                             }
+                            if (x.PostComments != null)
+                                foreach (var c in x.PostComments)
+                                {
+                                    if (c.CommentLikes != null)
+                                    {
+                                        CommentLikeList.Add(c.Id, c.CommentLikes.Any(c => c.LikedByUserId == selUser.Id));
+                                    }
+                                    else
+                                    {
+                                        CommentLikeList.Add(c.Id, false);
+                                    }
+                                }
                         });
+                        
 
                     }
                 }
@@ -408,7 +516,7 @@
             selUser = UserSvc.GetItemByUsername(Username);
 
         }
-
+        AppState.OnPostChange += PostRefresh;
         LoadData();
     }
     }

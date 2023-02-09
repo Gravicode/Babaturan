@@ -24,7 +24,42 @@ namespace Babaturan.Data
             db.SaveChanges();
             return true;
         }
+        public bool UnLikeComment(long userid, long commentid)
+        {
+            try
+            {
+                var removePost = db.CommentLikes.Where(x => x.LikedByUserId == userid && x.CommentId == commentid).FirstOrDefault();
+                if (removePost != null)
+                {
+                    db.CommentLikes.Remove(removePost);
+                }
 
+                db.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            return false;
+        }
+
+
+        public bool LikeComment(long userid, string username, long commentid)
+        {
+            try
+            {
+                var newLike = new CommentLike() { CreatedDate = DateHelper.GetLocalTimeNow(), LikedByUserName = username, LikedByUserId = userid, CommentId = commentid };
+                db.CommentLikes.Add(newLike);
+                db.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            return false;
+        }
         public List<PostComment> FindByKeyword(string Keyword)
         {
             var data = from x in db.PostComments
