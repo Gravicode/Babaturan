@@ -52,6 +52,15 @@ Header END -->
 
 @code {
     [Parameter]
+    public Post CurrentPost { get; set; }
+
+    [Parameter]
+    public Post NewPost { get; set; }
+
+    [Parameter]
+    public PostComment NewComment { get; set; }
+
+    [Parameter]
     public bool IsTransparent { get; set; } = true;
 
     [CascadingParameter]
@@ -63,6 +72,10 @@ Header END -->
         //NavMgr.NavigateTo($"/login");
     }
 
+    public async Task RefreshPage(bool IsSuccess)
+    {
+        await InvokeAsync(StateHasChanged);
+    }
 
     string Nama = "Saya";
     protected override async Task OnInitializedAsync()

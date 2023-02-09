@@ -12,6 +12,8 @@ using System.Net;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Babaturan.Models;
 using Babaturan.Data;
+using Xabe.FFmpeg.Downloader;
+using Xabe.FFmpeg;
 
 var builder = WebApplication.CreateBuilder(args);
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -107,6 +109,7 @@ AppConstants.SQLConn = Configuration["ConnectionStrings:SqlConn"];
 AppConstants.RedisCon = Configuration["RedisCon"];
 AppConstants.BlobConn = Configuration["ConnectionStrings:BlobConn"];
 AppConstants.GMapApiKey = Configuration["GmapKey"];
+AppConstants.FFMpegFolder = Configuration["FFMpegFolder"];
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazoredToast();
 
@@ -135,6 +138,9 @@ builder.Services.AddSingleton(setting);
 builder.Services.AddTransient<StorageObjectService>();
 
 AppConstants.DefaultPass = Configuration["App:DefaultPass"];
+
+await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Official, AppConstants.FFMpegFolder);
+FFmpeg.SetExecutablesPath(AppConstants.FFMpegFolder);
 
 builder.Services.AddSignalR(hubOptions =>
 {

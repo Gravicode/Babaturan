@@ -7,6 +7,7 @@ namespace Babaturan.Data
 {
     public class AppConstants
     {
+        public static string FFMpegFolder = "";
         public static long MaxAllowedFileSize = 500 * 1024000;
         public static string StorageEndpoint = "";
         public static string StorageAccess = "";

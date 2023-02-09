@@ -1,0 +1,47 @@
+﻿@inject BlogService BlogSvc
+@inject UserProfileService service
+@inject NavigationManager NavMgr
+<div class="col-sm-6 col-lg-12">
+    <div class="card">
+        <!-- Card header START -->
+        <div class="card-header pb-0 border-0">
+            <h5 class="card-title mb-0">Today’s news</h5>
+        </div>
+        <!-- Card header END -->
+        <!-- Card body START -->
+        <div class="card-body">
+            @if (LatestNews != null)
+                @foreach (var item in LatestNews)
+                {
+                    <!-- News item -->
+                    <div class="mb-3">
+                        <h6 class="mb-0"><a href="@($"/blog-detail/{item.Id}")">@item.Title</a></h6>
+                        <small>@DateHelper.GetElapsedTime(item.CreatedDate)</small>
+                    </div>
+                    <!-- News item -->
+                }
+            <!-- Load more comments -->
+            <a href="/blog" role="button" class="btn btn-link btn-link-loader btn-sm text-secondary d-flex align-items-center" data-bs-toggle="button" aria-pressed="true">
+                <div class="spinner-dots me-2">
+                    <span class="spinner-dot"></span>
+                    <span class="spinner-dot"></span>
+                    <span class="spinner-dot"></span>
+                </div>
+                View all latest news
+            </a>
+        </div>
+        <!-- Card body END -->
+    </div>
+</div>
+@code {
+    List<Blog> LatestNews = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        LatestNews = BlogSvc.GetLatest("",5);
+
+    }
+}
+

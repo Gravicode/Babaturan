@@ -1,0 +1,415 @@
+﻿@inject PostService PostSvc
+@inject IJSRuntime IJS
+@inject UserProfileService UserSvc
+@inject IToastService toastService
+@inject PostCommentService CommentSvc 
+@if (ListPost != null)
+    @foreach (var post in ListPost)
+    {
+        <!-- Card feed item START -->
+        <div class="card">
+            <!-- Card header START -->
+            <div class="card-header border-0 pb-0">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <!-- Avatar -->
+                        <div class="avatar avatar-story me-2">
+                            <a href="#!"> <img class="avatar-img rounded-circle" src="@(string.IsNullOrEmpty(post.User.PicUrl)?"assets/images/avatar/04.jpg":post.User.PicUrl)" alt=""> </a>
+                        </div>
+                        <!-- Info -->
+                        <div>
+                            <div class="nav nav-divider">
+                                <h6 class="nav-item card-title mb-0"> <a href="#!"> @post.User.FullName </a></h6>
+                                <span class="nav-item small"> @DateHelper.GetElapsedTime(post.CreatedDate)</span>
+                            </div>
+                            <p class="mb-0 small">@post.User.Job</p>
+                        </div>
+                    </div>
+                    <!-- Card feed action dropdown START -->
+                    <div class="dropdown">
+                        <a href="#" class="text-secondary btn btn-secondary-soft-hover py-1 px-2" id="cardFeedAction" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i>
+                        </a>
+                        <!-- Card feed action dropdown menu -->
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="cardFeedAction">
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-bookmark fa-fw pe-2"></i>Save post</a></li>
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-person-x fa-fw pe-2"></i>Unfollow @post.User.FullName </a></li>
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-x-circle fa-fw pe-2"></i>Hide post</a></li>
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-slash-circle fa-fw pe-2"></i>Block</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-flag fa-fw pe-2"></i>Report post</a></li>
+                        </ul>
+                    </div>
+                    <!-- Card feed action dropdown END -->
+                </div>
+            </div>
+            <!-- Card header END -->
+            <!-- Card body START -->
+            <div class="card-body">
+                <p>@((MarkupString)post.Message.ParseURL().ParseUsername().ParseHashtag())</p>
+                <!-- Card img -->
+                @if (post.PostType == PostTypes.ImagePost)
+                {
+                        <img class="card-img" src="@post.ImageUrls" alt="Post">
+                }
+                else if (post.PostType == PostTypes.VideoPost)
+                {
+                    <div class="overflow-hidden fullscreen-video w-100">
+
+                        <!-- HTML video START -->
+                        <div class="player-wrapper overflow-hidden">
+                            <video class="player-html" controls crossorigin="anonymous" poster="@post.Video?.ThumbnailUrl">
+                                <source src="@(string.IsNullOrEmpty(post.VideoUrls)?"assets/images/videos/video-feed.mp4": post.VideoUrls)" type="video/mp4">
+                            </video>
+                        </div>
+                        <!-- HTML video END -->
+                        <!-- Plyr resources and browser polyfills are specified in the pen settings -->
+                    </div>
+                }
+                <!-- Feed react START -->
+                <ul class="nav nav-stack py-3 small">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#!"> <i class="bi bi-hand-thumbs-up-fill pe-1"></i>Liked (@post.PostLikes.Count.ToString("n0"))</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#!"> <i class="bi bi-chat-fill pe-1"></i>Comments (@post.PostComments.Count.ToString("n0"))</a>
+                    </li>
+                    <!-- Card share action START -->
+                    <li class="nav-item dropdown ms-sm-auto">
+                        <a class="nav-link mb-0" href="#" id="cardShareAction" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-reply-fill flip-horizontal ps-1"></i>Share (@post.Reposts.Count.ToString("n0"))
+                        </a>
+                        <!-- Card share action dropdown menu -->
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="cardShareAction">
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-envelope fa-fw pe-2"></i>Send via Direct Message</a></li>
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-bookmark-check fa-fw pe-2"></i>Bookmark </a></li>
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-link fa-fw pe-2"></i>Copy link to post</a></li>
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-share fa-fw pe-2"></i>Share post via …</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#"> <i class="bi bi-pencil-square fa-fw pe-2"></i>Share to News Feed</a></li>
+                        </ul>
+                    </li>
+                    <!-- Card share action END -->
+                </ul>
+                <!-- Feed react END -->
+                <!-- Add comment -->
+                <div class="d-flex mb-3">
+                    <!-- Avatar -->
+                    <div class="avatar avatar-xs me-2">
+                        <a href="#!"> <img class="avatar-img rounded-circle" src="@(string.IsNullOrEmpty(selUser.PicUrl)?"assets/images/avatar/12.jpg":selUser.PicUrl)" alt=""> </a>
+                    </div>
+                    <!-- Comment box  -->
+                    <form class="w-100">
+                        <textarea @bind="NewComments[post.Id]" @onkeyup="SendComment" @onfocus="@( () => SetCommentFocus(post.Id) )"  data-autoresize class="form-control pe-4 bg-light" rows="1" placeholder="Add a comment..."></textarea>
+                    </form>
+                </div>
+                <!-- Comment wrap START -->
+                <ul class="comment-wrap list-unstyled">
+                    @if (post.PostComments != null)
+                    {
+                        @foreach (var comment in post.PostComments)
+                        {
+
+                            <!-- Comment item START -->
+                            <li class="comment-item">
+                                <div class="d-flex position-relative">
+                                    <!-- Avatar -->
+                                    <div class="avatar avatar-xs">
+                                        <a href="#!"><img class="avatar-img rounded-circle" src="@( string.IsNullOrEmpty( comment.User?.PicUrl) ? "assets/images/avatar/05.jpg":comment.User?.PicUrl)" alt=""></a>
+                                    </div>
+                                    <div class="ms-2">
+                                        <!-- Comment by -->
+                                        <div class="bg-light rounded-start-top-0 p-3 rounded">
+                                            <div class="d-flex justify-content-between">
+                                                <h6 class="mb-1"> <a href="#!"> @comment.User?.FullName </a></h6>
+                                                <small class="ms-2">@DateHelper.GetElapsedTime(comment.CreatedDate)</small>
+                                            </div>
+                                            <p class="small mb-0">@comment.Comment</p>
+                                        </div>
+                                        <!-- Comment react -->
+                                        <ul class="nav nav-divider py-2 small">
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="#!"> Like (@comment.CommentLikes.Count)</a>
+                                            </li>                                                                                       
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Comment item nested END -->
+                            </li>
+                            <!-- Comment item END -->
+                        }}
+                </ul>
+                <!-- Comment wrap END -->
+            </div>
+            <!-- Card body END -->
+            <!-- Card footer START -->
+            <div class="card-footer border-0 pt-0">
+                <!-- Load more comments -->
+                <a href="#!" role="button" class="btn btn-link btn-link-loader btn-sm text-secondary d-flex align-items-center" data-bs-toggle="button" aria-pressed="true">
+                    <div class="spinner-dots me-2">
+                        <span class="spinner-dot"></span>
+                        <span class="spinner-dot"></span>
+                        <span class="spinner-dot"></span>
+                    </div>
+                    Load more comments
+                </a>
+            </div>
+            <!-- Card footer END -->
+        </div>
+        <!-- Card feed item END -->
+    }
+        
+@code {
+    public enum FeedTypes { Timeline, OnlyMe, Liked, Repost, Mention, Trending }
+
+    [Parameter]
+    public string Keyword { get; set; }
+
+    [Parameter]
+    public FeedTypes FeedType { get; set; } = FeedTypes.Timeline;
+    [CascadingParameter]
+    public MainLayout Layout { get; set; }
+    [Parameter]
+    public string UserName { get; set; }
+
+    public List<Post> ListPost { get; set; }
+    Dictionary<long, string> NewComments = new();
+    Dictionary<long, bool> LikeList = new();
+    long ActivePostId = -1;
+    async Task SetCommentFocus(long PostId)
+    {
+        ActivePostId = PostId;
+    }
+    public void SendComment(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            var msg = NewComments[ActivePostId];
+            if (string.IsNullOrEmpty(msg))
+            {
+                toastService.ShowError("Please type comment first");
+            }
+            else
+            {
+                var newComment = new PostComment() { PostId = ActivePostId, Comment = msg, CreatedDate=DateHelper.GetLocalTimeNow(),
+                    UserId = selUser.Id, Username=selUser.Username};
+                var res = CommentSvc.InsertData(newComment);
+                if (res)
+                {
+                    toastService.ShowSuccess("comment posted.");
+                    NewComments[ActivePostId] = string.Empty;
+                    Refresh();
+                }
+            }
+        }
+    }
+    async Task OpenComment(Post post)
+    {
+        if (!IsLogin)
+        {
+            toastService.ShowWarning("Silakan login terlebih dahulu untuk komentar");
+            return;
+        }
+        Layout.CurrentPost = post;
+        Layout.NewComment = new();
+        //data-bs-toggle="modal" data-bs-target="#commentModal"
+        await IJS.InvokeVoidAsync("ShowModal", "commentModal");
+        //await Layout.RefreshComment();
+        //Layout.ThisCommentPage.Refresh();
+
+
+    }
+
+    async Task TogglePostLike(Post post, bool Like)
+    {
+        Like = !Like;
+        if (Like)
+        {
+            PostSvc.LikePost(selUser.Id, selUser.Username, post.Id);
+        }
+        else
+        {
+            PostSvc.UnLikePost(selUser.Id, post.Id);
+        }
+        LikeList[post.Id] = Like;
+    }
+
+    public void Refresh()
+    {
+        LoadData();
+        StateHasChanged();
+    }
+
+    void LoadData()
+    {
+        switch (FeedType)
+        {
+            case FeedTypes.Timeline:
+                {
+                    ListPost = PostSvc.GetTimeline(UserName);
+                    if (!string.IsNullOrEmpty(Username))
+                    {
+                        LikeList.Clear();
+                        ListPost.ForEach(x =>
+                        {
+                            if (x.PostLikes != null)
+                            {
+                                LikeList.Add(x.Id, x.PostLikes.Any(c => c.LikedByUserId == selUser.Id));
+                            }
+                            else
+                            {
+                                LikeList.Add(x.Id, false);
+                            }
+                        });
+
+                    }
+                }
+                break;
+            case FeedTypes.OnlyMe:
+                {
+                    ListPost = PostSvc.GetMyTimeline(UserName);
+                    if (!string.IsNullOrEmpty(Username))
+                    {
+                        LikeList.Clear();
+                        ListPost.ForEach(x =>
+                        {
+                            if (x.PostLikes != null)
+                            {
+                                LikeList.Add(x.Id, x.PostLikes.Any(c => c.LikedByUserId == selUser.Id));
+                            }
+                            else
+                            {
+                                LikeList.Add(x.Id, false);
+                            }
+                        });
+
+                    }
+                }
+                break;
+            case FeedTypes.Liked:
+                {
+                    ListPost = PostSvc.GetLikedPosts(UserName);
+                    if (!string.IsNullOrEmpty(Username))
+                    {
+                        LikeList.Clear();
+                        ListPost.ForEach(x =>
+                        {
+                            if (x.PostLikes != null)
+                            {
+                                if (!LikeList.ContainsKey(x.Id))
+                                    LikeList.Add(x.Id, x.PostLikes.Any(c => c.LikedByUserId == selUser.Id));
+                            }
+                            else
+                            {
+                                if (!LikeList.ContainsKey(x.Id))
+                                    LikeList.Add(x.Id, false);
+                            }
+                        });
+
+                    }
+                }
+                break;
+            case FeedTypes.Repost:
+                {
+                    ListPost = PostSvc.GetRepost(UserName);
+                    if (!string.IsNullOrEmpty(Username))
+                    {
+                        LikeList.Clear();
+                        ListPost.ForEach(x =>
+                        {
+                            if (x.PostLikes != null)
+                            {
+                                if (!LikeList.ContainsKey(x.Id))
+                                    LikeList.Add(x.Id, x.PostLikes.Any(c => c.LikedByUserId == selUser.Id));
+                            }
+                            else
+                            {
+                                if (!LikeList.ContainsKey(x.Id))
+                                    LikeList.Add(x.Id, false);
+                            }
+                        });
+
+                    }
+                }
+                break;
+            case FeedTypes.Mention:
+                {
+                    ListPost = PostSvc.GetPostMentions(UserName);
+                    if (!string.IsNullOrEmpty(Username))
+                    {
+                        LikeList.Clear();
+                        ListPost.ForEach(x =>
+                        {
+                            if (x.PostLikes != null)
+                            {
+                                if (!LikeList.ContainsKey(x.Id))
+                                    LikeList.Add(x.Id, x.PostLikes.Any(c => c.LikedByUserId == selUser.Id));
+                            }
+                            else
+                            {
+                                if (!LikeList.ContainsKey(x.Id))
+                                    LikeList.Add(x.Id, false);
+                            }
+                        });
+
+                    }
+                }
+                break;
+            case FeedTypes.Trending:
+                {
+                    if (!string.IsNullOrEmpty(Keyword))
+                        ListPost = PostSvc.FindByKeyword(Keyword);
+                    else
+                        ListPost = PostSvc.GetTrendingPosts();
+                    if (!string.IsNullOrEmpty(Username))
+                    {
+                        LikeList.Clear();
+                        ListPost.ForEach(x =>
+                        {
+                            if (x.PostLikes != null)
+                            {
+                                if (!LikeList.ContainsKey(x.Id))
+                                    LikeList.Add(x.Id, x.PostLikes.Any(c => c.LikedByUserId == selUser.Id));
+                            }
+                            else
+                            {
+                                if (!LikeList.ContainsKey(x.Id))
+                                    LikeList.Add(x.Id, false);
+                            }
+                        });
+
+                    }
+                }
+                break;
+        }
+
+        NewComments.Clear();
+        ListPost?.ForEach(x =>
+        {
+            NewComments.Add(x.Id,string.Empty);
+        });
+
+    }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string Username;
+    UserProfile selUser;
+    bool IsLogin = false;
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            IsLogin = true;
+            Username = user.Identity.Name;
+            selUser = UserSvc.GetItemByUsername(Username);
+
+        }
+
+        LoadData();
+    }
+    }
+

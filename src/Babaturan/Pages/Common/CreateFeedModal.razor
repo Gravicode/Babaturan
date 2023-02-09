@@ -9,6 +9,7 @@
 @inject PostService PostSvc
 @inject TrendingService TrendingSvc
 @inject AppState AppState
+@using Xabe.FFmpeg;
 @implements IDisposable
 <div class="modal fade" id="modalCreateFeed" tabindex="-1" aria-labelledby="modalLabelCreateFeed" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -43,7 +44,13 @@
                 </div>
                 <InputFile @ref="imageUpload" id="uploadImage1" accept=".jpg,.png,.jpeg,.gif" OnChange="UploadFiles" hidden />
                 <InputFile @ref="videoUpload" id="uploadVideo1" accept=".mp4,.avi,.wmv,.3gp" OnChange="UploadFiles" hidden />
-
+                @if (IsUploading)
+                {                   
+                    <button class="btn btn-primary" type="button" disabled>
+                        <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                        @DriveHelper.GetSize(CurrentFile.Size). @(DriveHelper.GetSize((double)(100 - ProgressPercent) / 100 * CurrentFile.Size)) lagi.
+                    </button>
+                }
                 <!-- Feed rect END -->
             </div>
             <!-- Modal feed body END -->
@@ -72,6 +79,9 @@
 </div>
 @code {
     @code {
+        private decimal progressPercent;
+        int ProgressPercent;
+        bool IsUploading { set; get; } = false;
         [Parameter]
         public Action PostDataChanged { get; set; }
         InputFile imageUpload;
@@ -136,9 +146,14 @@
                 ErrorMsg += "Tolong di isi pesan. ";
 
             }
-            if (string.IsNullOrEmpty(NewPost.ImageUrls))
+            if (NewPost.PostType == PostTypes.ImagePost && string.IsNullOrEmpty(NewPost.ImageUrls))
             {
                 ErrorMsg += "Tolong pilih gambar. ";
+
+            }
+            if (NewPost.PostType == PostTypes.VideoPost && string.IsNullOrEmpty(NewPost.VideoUrls))
+            {
+                ErrorMsg += "Tolong pilih video. ";
 
             }
             if (ErrorMsg.Length > 0)
@@ -204,35 +219,109 @@
                 toastService.ShowError("Gagal posting, ga tau kenapa..", "Kecele");
             }
         }
-
+        public IBrowserFile CurrentFile { get; set; }
         private async Task UploadFiles(InputFileChangeEventArgs e)
         {
-            var file = e.File;
-            if (file != null)
+            IsUploading = true;
+            ProgressPercent = 0;
+            progressPercent = 0;
+            foreach (var file in e.GetMultipleFiles(e.FileCount))
             {
-                var ms = new MemoryStream();
-                await file.OpenReadStream(AppConstants.MaxAllowedFileSize).CopyToAsync(ms);
-                var arr = ms.ToArray();
-                var bytes = ImageHelper.FixedSize(ms, 800, 600, false);
-                string newName = string.Empty;
-
-                newName = $"lampiran_{TipeUpload.ToString()}_{Username}_{DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss")}_{file.Name}";
-                var FileUrl = $"{AppConstants.UploadUrlPrefix}{newName}";
-                await AzureBlobHelper.UploadFile(newName, bytes);
-                switch (TipeUpload)
+                //var file = e.File;
+                if (file != null)
                 {
-                    case UploadTypes.Doc:
-                        NewPost.DocUrls = FileUrl;
-                        break;
-                    case UploadTypes.Image:
-                        NewPost.ImageUrls = FileUrl;
-                        break;
-                    case UploadTypes.Video:
-                        NewPost.VideoUrls = FileUrl;
-                        break;
-                }
+                    CurrentFile = file;
+                    var ms = new MemoryStream();
+                    using var readStream = file.OpenReadStream(AppConstants.MaxAllowedFileSize);
+                    var bytesRead = 0;
+                    var totalRead = 0;
+                    var buffer = new byte[1024 * 100];
 
+                    while ((bytesRead = await readStream.ReadAsync(buffer)) != 0)
+                    {
+                        totalRead += bytesRead;
+
+                        await ms.WriteAsync(buffer, 0, bytesRead);
+
+                        progressPercent = Decimal.Divide(totalRead, file.Size);
+                        ProgressPercent = (int)(100 * progressPercent);
+                        StateHasChanged();
+                        await Task.Delay(1);
+                    }
+
+
+                    byte[] bytes = null;
+
+                    if (TipeUpload == UploadTypes.Video)
+                    {
+                        bytes = ms.ToArray();
+                        //get thumbnail
+                        try
+                        {
+                            NewPost.Video = new PostVideo() { Category = "General" };
+                            var pathToVideoFile = Path.GetTempFileName() + Path.GetExtension(file.Name);
+                            var screenShotFile = Path.GetTempFileName() + ".png";
+                            File.WriteAllBytes(pathToVideoFile, bytes);
+                            var mediaInfo = await FFmpeg.GetMediaInfo(pathToVideoFile);
+                            NewPost.Video.Duration = mediaInfo.Duration;
+                            //IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(pathToVideoFile, screenShotFile, TimeSpan.FromSeconds(0));
+                            //IConversionResult result = await conversion.Start();
+                            Func<string, string> outputFileNameBuilder = (number) => { return screenShotFile; };
+
+                            IVideoStream videoStream = mediaInfo.VideoStreams.First()?.SetCodec(VideoCodec.png);
+
+                            IConversionResult conversionResult = await FFmpeg.Conversions.New()
+                                .AddStream(videoStream)
+                                .ExtractNthFrame(10, outputFileNameBuilder)
+                                .Start();
+
+
+                            
+                            if (File.Exists(screenShotFile))
+                            {
+                                var ScreenShotName = $"Screenshot_{(string.IsNullOrEmpty(selUser.Username) ? "rojul" : selUser.Username)}_{UIDHelper.CreateNewUID()}.png";
+                                var imageBytes = File.ReadAllBytes(screenShotFile);
+                                var FileUrlImg = $"{AppConstants.UploadUrlPrefix}{ScreenShotName}";
+                                await AzureBlobHelper.UploadFile(ScreenShotName, imageBytes);
+                                NewPost.Video.ThumbnailUrl = FileUrlImg;
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+
+                            Console.WriteLine(ex);
+                        }
+
+                    }
+                    else
+                    {
+                        bytes = ImageHelper.FixedSize(ms, 800, 600, false);
+                    }
+
+                    string newName = string.Empty;
+
+                    newName = $"lampiran_{TipeUpload.ToString()}_{Username}_{DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss")}_{file.Name}";
+                    var FileUrl = $"{AppConstants.UploadUrlPrefix}{newName}";
+                    await AzureBlobHelper.UploadFile(newName, bytes);
+                    switch (TipeUpload)
+                    {
+                        case UploadTypes.Doc:
+                            NewPost.DocUrls = FileUrl;
+                            break;
+                        case UploadTypes.Image:
+                            NewPost.ImageUrls = FileUrl;
+                            break;
+                        case UploadTypes.Video:
+                            NewPost.Video.Title = file.Name;
+                            NewPost.VideoUrls = FileUrl;
+                            break;
+                    }
+                }
+                break;
             }
+            IsUploading = false;
+
         }
-            }
-        }
+    }
+}

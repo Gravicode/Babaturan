@@ -1,0 +1,100 @@
+﻿@inject FollowService FollowSvc
+@inject UserProfileService UserSvc
+<div class="col-sm-6 col-lg-12">
+    <div class="card">
+        <!-- Card header START -->
+        <div class="card-header pb-0 border-0">
+            <h5 class="card-title mb-0">Who to follow</h5>
+        </div>
+        <!-- Card header END -->
+        <!-- Card body START -->
+        <div class="card-body">
+            @if (ListFollow != null)
+            {
+                @foreach (var usr in ListFollow)
+                {
+                    <!-- Connection item START -->
+                    <div class="hstack gap-2 mb-3">
+                        <!-- Avatar -->
+                        <div class="avatar">
+                            <a href="@($"/babaturan.my.id/my-profile/{Uri.EscapeDataString(usr.User.Username)}")"> <img class="avatar-img rounded-circle" src="@(string.IsNullOrEmpty(usr.User.PicUrl)?"assets/images/avatar/placeholder.jpg":usr.User.PicUrl)" alt=""> </a>
+                        </div>
+                        <!-- Title -->
+                        <div class="overflow-hidden">
+                            <a class="h6 mb-0" href="#!">@usr.User.FullName </a>
+                            <p class="mb-0 small text-truncate">@usr.User.Job</p>
+                        </div>
+
+                        <!-- Button -->
+                        <a class="@(usr.IsFollow?"btn btn-primary rounded-circle icon-md ms-auto":"btn btn-primary-soft rounded-circle icon-md ms-auto")" @onclick="(()=>ToggleFollow(usr))" href="#">
+                            @if (usr.IsFollow)
+                            {
+                                <i class="bi bi-person-check-fill"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-plus"> </i>
+                            }
+                        </a>
+
+                    </div>
+                }
+            }
+            <!-- Connection item END -->
+            <!-- View more button -->
+            <div class="d-grid mt-3">
+                <a class="btn btn-sm btn-primary-soft" href="#!">View more</a>
+            </div>
+        </div>
+        <!-- Card body END -->
+    </div>
+</div>
+@code {
+    [Parameter]
+    public string Username { get; set; }
+    public List<TempFollow> ListFollow { get; set; }
+    UserProfile selUser;
+    
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    bool HasLogin = false;
+    protected override async Task OnInitializedAsync()
+    {
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            Username = user.Identity.Name;
+            HasLogin = true;
+            selUser = UserSvc.GetItemByUsername(Username);
+
+        }
+
+        var ListUser = FollowSvc.GetRandomPeople(Username);
+        ListFollow = new();
+        if (ListUser != null)
+        {
+            foreach (var item in ListUser)
+            {
+                ListFollow.Add(new TempFollow() { IsFollow = false, User = item });
+            }
+        }
+
+    }
+
+    async Task ToggleFollow(TempFollow temp)
+    {
+        temp.IsFollow = !temp.IsFollow;
+        if (temp.IsFollow)
+        {
+            FollowSvc.FollowUser(selUser.Username, selUser.Id, temp.User.Username, temp.User.Id);
+        }
+        else
+        {
+            FollowSvc.UnFollowUser(selUser.Id, temp.User.Id);
+        }
+    }
+}
+

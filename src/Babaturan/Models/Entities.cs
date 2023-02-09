@@ -58,7 +58,16 @@ namespace Babaturan.Models
     }
     #endregion
     */
-    #region helpers model  
+    #region helpers model
+    public class TempFollow
+    {
+
+        public bool IsFollow
+        {
+            get; set;
+        }
+        public UserProfile User { get; set; }
+    }
     public class StorageObject
     {
         public string Name { get; set; }

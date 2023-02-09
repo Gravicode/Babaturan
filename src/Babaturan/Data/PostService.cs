@@ -142,7 +142,7 @@ namespace Babaturan.Data
         {
             if (string.IsNullOrEmpty(Username))
             {
-                var data = from x in db.Posts.Include(c => c.PostComments).Include(c => c.PostLikes).Include(c => c.User)
+                var data = from x in db.Posts.Include(c => c.PostComments).Include(c => c.PostLikes).Include(c => c.User).Include(c=>c.Reposts)
                            
                            orderby x.Id descending
                            select x;
