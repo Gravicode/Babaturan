@@ -1,4 +1,17 @@
-﻿<div class="modal fade" id="modalCreateEvents" tabindex="-1" aria-labelledby="modalLabelCreateAlbum" aria-hidden="true">
+﻿@inject NavigationManager NavMgr
+@inject AzureBlobHelper AzureBlobHelper;
+@inject IJSRuntime IJS
+@using System.IO
+@using System.Text.Json
+@using System.Text.RegularExpressions
+@inject IToastService toastService
+@inject UserProfileService UserSvc
+@inject PostService PostSvc
+@inject TrendingService TrendingSvc
+@inject AppState AppState
+@implements IDisposable
+
+<div class="modal fade" id="modalCreateEvents" tabindex="-1" aria-labelledby="modalLabelCreateAlbum" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <!-- Modal feed header START -->
@@ -14,80 +27,99 @@
                     <!-- Title -->
                     <div class="col-12">
                         <label class="form-label">Title</label>
-                        <input type="email" class="form-control" placeholder="Event name here">
+                        <input type="text" @bind="NewPost.Event.Title" class="form-control" placeholder="Event name here">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Category</label>
+                        <select @bind="NewPost.Event.Category" class="form-select js-choice rounded" data-remove-item-button="true" data-placeholder="false">
+                            <option value="-">Pilih</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Fashion">Fashion</option>
+                            <option value="Community">Community</option>
+                            <option value="Entrepreneur">Entrepreneur</option>
+                            <option value="Music and Arts">Music and Arts</option>
+                            <option value="Hobbyist">Hobbyist</option>
+                            <option value="Science">Science</option>
+                            <option value="Others">Others</option>
+                        </select>
                     </div>
                     <!-- Description -->
                     <div class="col-12">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" rows="2" placeholder="Ex: topics, schedule, etc."></textarea>
+                        <textarea class="form-control" @bind="NewPost.Event.Desc" rows="2" placeholder="Ex: topics, schedule, etc."></textarea>
                     </div>
                     <!-- Date -->
                     <div class="col-sm-4">
                         <label class="form-label">Date</label>
-                        <input type="text" class="form-control flatpickr" placeholder="Select date">
+                        <input type="text" @bind="NewPost.Event.EventDate" class="form-control flatpickr" placeholder="Select date">
                     </div>
                     <!-- Time -->
                     <div class="col-sm-4">
                         <label class="form-label">Time</label>
-                        <input type="text" class="form-control flatpickr" data-enableTime="true" data-noCalendar="true" placeholder="Select time">
+                        <input type="text" class="form-control flatpickr" @bind="NewPost.Event.EventTime" data-enableTime="true" data-noCalendar="true" placeholder="Select time">
                     </div>
                     <!-- Duration -->
                     <div class="col-sm-4">
                         <label class="form-label">Duration</label>
-                        <input type="email" class="form-control" placeholder="1hr 23m">
+                        <input type="text" class="form-control" @bind="NewPost.Event.Duration"  placeholder="1hr 23m">
                     </div>
                     <!-- Location -->
                     <div class="col-12">
                         <label class="form-label">Location</label>
-                        <input type="email" class="form-control" placeholder="Logansport, IN 46947">
+                        <input type="text" class="form-control" @bind="NewPost.Event.EventLocation.Address" placeholder="Logansport, IN 46947">
+                  
+                        <a class="btn btn-success btn-sm mt-2 mb-2" style="cursor:crosshair;color:white;" @onclick="(() => SetLocation(NewPost.Event.EventLocation.Address))" data-toggle="modal" data-target="#locationModal">Pilih Lokasi di Peta</a>
+                       
                     </div>
+                    
                     <!-- Add guests -->
                     <div class="col-12">
                         <label class="form-label">Add guests</label>
-                        <input type="email" class="form-control" placeholder="Guest email">
+                        <input type="email" @bind="GuestStr" class="form-control" placeholder="Guest email">
                     </div>
                     <!-- Avatar group START -->
                     <div class="col-12 mt-3">
-                        <ul class="avatar-group list-unstyled align-items-center mb-0">
-                            <li class="avatar avatar-xs">
-                                <img class="avatar-img rounded-circle" src="assets/images/avatar/01.jpg" alt="avatar">
-                            </li>
-                            <li class="avatar avatar-xs">
-                                <img class="avatar-img rounded-circle" src="assets/images/avatar/02.jpg" alt="avatar">
-                            </li>
-                            <li class="avatar avatar-xs">
-                                <img class="avatar-img rounded-circle" src="assets/images/avatar/03.jpg" alt="avatar">
-                            </li>
-                            <li class="avatar avatar-xs">
-                                <img class="avatar-img rounded-circle" src="assets/images/avatar/04.jpg" alt="avatar">
-                            </li>
-                            <li class="avatar avatar-xs">
-                                <img class="avatar-img rounded-circle" src="assets/images/avatar/05.jpg" alt="avatar">
-                            </li>
-                            <li class="avatar avatar-xs">
-                                <img class="avatar-img rounded-circle" src="assets/images/avatar/06.jpg" alt="avatar">
-                            </li>
-                            <li class="avatar avatar-xs">
-                                <img class="avatar-img rounded-circle" src="assets/images/avatar/07.jpg" alt="avatar">
-                            </li>
-                            <li class="ms-3">
-                                <small> +50 </small>
-                            </li>
-                        </ul>
+                        @if (NewPost.Event.Guests.Count > 0)
+                        {
+                            var usercount = 0;
+                            <ul class="avatar-group list-unstyled align-items-center mb-0">
+                                @foreach(var guest in NewPost.Event.Guests)
+                                {
+                                    if (usercount++ > 5) break;
+                                    <li class="avatar avatar-xs">
+                                        <img class="avatar-img rounded-circle" src="@($"/api/User/GetPicByUsername?Username={Uri.EscapeDataString(guest.ItemValue)}")" alt="avatar">
+                                    </li>
+                                }
+                              
+                                @if(NewPost.Event.Guests.Count - 5 > 0)
+                                {
+                                    <li class="ms-3">
+                                        <small> +@(NewPost.Event.Guests.Count - 5) </small>
+                                    </li>
+                                }
+                               
+                            </ul>
+                        }
+                      
                     </div>
                     <!-- Upload Photos or Videos -->
                     <!-- Dropzone photo START -->
                     <div>
                         <label class="form-label">Upload attachment</label>
                         <div class="dropzone dropzone-default card shadow-none" data-dropzone='{"maxFiles":2}'>
-                            <div class="dz-message">
+                            <div class="dz-message" @onclick:preventDefault @onclick:stopPropagation @onclick="(()=>PrepareUpload())">
                                 <i class="bi bi-file-earmark-text display-3"></i>
                                 <p>Drop presentation and document here or click to upload.</p>
                             </div>
                         </div>
+                        <InputFile id="uploadDoc1" accept=".jpg,.png,.jpeg,.gif,.pdf,.zip,.mp4,.mp3,.bmp,.docx,.xlsx,.pptx" OnChange="UploadFiles" hidden />
                     </div>
+                    <PickLocation @ref="loc" DataChanged="@RefreshLocation">
+                        <CustomHeader>Pilih Lokasi</CustomHeader>
+                    </PickLocation>
                     <!-- Dropzone photo END -->
                 </form>
+                
                 <!-- Form END -->
             </div>
             <!-- Modal feed body END -->
@@ -95,11 +127,206 @@
             <!-- Button -->
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger-soft me-2" data-bs-dismiss="modal"> Cancel</button>
-                <button type="button" class="btn btn-success-soft">Create now</button>
+                <button type="button" @onclick:preventDefault @onclick:stopPropagation @onclick="PostMessage" class="btn btn-success-soft">Create now</button>
             </div>
+           
         </div>
     </div>
 </div>
-@code {
 
+@code {
+    string _guest;
+    string GuestStr { set { this._guest = value; NewPost.Event.Guests = this._guest.Trim().Split(',').Select(x => new ItemString() { ItemValue = x }).ToList(); } get { return _guest; } }
+    public PickLocation loc { get; set; }
+    private decimal progressPercent;
+    int ProgressPercent;
+    bool IsUploading { set; get; } = false;
+    [Parameter]
+    public Action PostDataChanged { get; set; }
+    InputFile imageUpload;
+    InputFile videoUpload;
+    [Parameter]
+    public Post NewPost { get; set; }
+    UploadTypes TipeUpload;
+    UserProfile selUser;
+    public enum UploadTypes { Image, Doc, Video }
+    public async void SetLocation(string Alamat)
+    {
+        loc.Address = Alamat;
+        StateHasChanged();
+        await IJS.InvokeVoidAsync("ShowModal", "locationModal");
+    }
+    private async void RefreshLocation()
+    {
+        var newLoc = new GeoLocation();
+        newLoc = loc.SelectedLocation;
+        NewPost.Event.EventLocation.Latitude = newLoc.Latitude;
+        NewPost.Event.EventLocation.Longitude = newLoc.Longitude;
+
+        //AppState.SelectLocation(UserName, newLoc);
+
+    }
+    async Task PrepareUpload()
+    {
+        await IJS.InvokeVoidAsync("OpenFileUpload", "uploadDoc1");
+
+    }
+    void NewPostRefresh(string Username)
+    {
+        this.NewPost = new() { PostType = PostTypes.EventPost, AccessType = AccessTypes.Public, CreatedDate = DateHelper.GetLocalTimeNow(), Event = new PostEvent() { Attachments = new(), Attendance= new(), EventDate = DateHelper.GetLocalTimeNow(), FAQs = new(), Guests = new(), Registered=new(), Visitors=new(), EventLocation=new(), Hosts=new(), Schedules=new(), EventTime = new TimeSpan(0,0,0)   } };
+        StateHasChanged();
+    }
+    void IDisposable.Dispose()
+    {
+        AppState.OnNewPostChange -= NewPostRefresh;
+    }
+    string ErrorMsg;
+    async Task NotAvailable()
+    {
+        toastService.ShowWarning("Not available yet.");
+    }
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string Username;
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            Username = user.Identity.Name;
+            selUser = UserSvc.GetItemByUsername(Username);
+
+        }
+        AppState.OnNewPostChange += NewPostRefresh;
+        if (NewPost == null)
+        {
+            NewPostRefresh(Username);
+        }
+    }
+    async Task PostMessage()
+    {
+        ErrorMsg = "";
+
+
+        if (string.IsNullOrEmpty(NewPost.Event.Title))
+        {
+            ErrorMsg += "Tolong di isi nama event. ";
+
+        }
+        if (string.IsNullOrEmpty(NewPost.Event.EventLocation.Address))
+        {
+            ErrorMsg += "Tolong di isi lokasi event. ";
+
+        }
+
+        if (ErrorMsg.Length > 0)
+        {
+            toastService.ShowWarning(ErrorMsg, "Perhatian");
+            return;
+        }
+        NewPost.Message = $"Event: {NewPost.Event.Title}";
+        NewPost.CreatedDate = DateHelper.GetLocalTimeNow();
+        NewPost.Id = 0;
+        NewPost.UserName = Username;
+        //get link if exists
+        //var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        var linkParser = new Regex(@"(http(s)?://)?([\w-]+\.)+[\w-]+(/\S\w[\w- ;,./?%&=]\S*)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        var cnt = 0;
+        NewPost.LinkUrls = "";
+        foreach (Match m in linkParser.Matches(NewPost.Message))
+        {
+            if (cnt > 0) NewPost.LinkUrls += ";";
+            NewPost.LinkUrls += m.Value;
+            cnt++;
+        }
+        //extract hashtag
+        var regex = new Regex(@"#\w+");
+        var matches = regex.Matches(NewPost.Message);
+        cnt = 0;
+        NewPost.Hashtags = "";
+        foreach (Match m in matches)
+        {
+            if (cnt > 0) NewPost.Hashtags += ";";
+            NewPost.Hashtags += m.Value;
+            cnt++;
+        }
+        //extract mention
+        regex = new Regex("(@)((?:[A-Za-z0-9-_]*))");
+        matches = regex.Matches(NewPost.Message);
+        cnt = 0;
+        NewPost.Mentions = "";
+        foreach (Match m in matches)
+        {
+            if (cnt > 0) NewPost.Mentions += ";";
+            NewPost.Mentions += m.Value;
+            cnt++;
+        }
+
+
+        if (selUser != null)
+        {
+            NewPost.UserId = selUser.Id;
+        }
+        if (PostSvc.InsertData(NewPost))
+        {
+            TrendingSvc.InsertFromPost(selUser, NewPost);
+            toastService.ShowSuccess("Posting berhasil.", "Info");
+            AppState.RefreshPost(selUser.Username);
+            await IJS.InvokeVoidAsync("CloseModal", "modalCreateEvents");
+
+            PostDataChanged?.Invoke();
+
+        }
+        else
+        {
+            toastService.ShowError("Gagal posting, ga tau kenapa..", "Kecele");
+        }
+    }
+    public IBrowserFile CurrentFile { get; set; }
+    private async Task UploadFiles(InputFileChangeEventArgs e)
+    {
+        IsUploading = true;
+        ProgressPercent = 0;
+        progressPercent = 0;
+        foreach (var file in e.GetMultipleFiles(e.FileCount))
+        {
+            //var file = e.File;
+            if (file != null)
+            {
+                CurrentFile = file;
+                var ms = new MemoryStream();
+                using var readStream = file.OpenReadStream(AppConstants.MaxAllowedFileSize);
+                var bytesRead = 0;
+                var totalRead = 0;
+                var buffer = new byte[1024 * 100];
+
+                while ((bytesRead = await readStream.ReadAsync(buffer)) != 0)
+                {
+                    totalRead += bytesRead;
+
+                    await ms.WriteAsync(buffer, 0, bytesRead);
+
+                    progressPercent = Decimal.Divide(totalRead, file.Size);
+                    ProgressPercent = (int)(100 * progressPercent);
+                    StateHasChanged();
+                    await Task.Delay(1);
+                }
+
+                byte[] bytes = ms.ToArray();
+
+                string newName = string.Empty;
+
+                newName = $"lampiran_{TipeUpload.ToString()}_{Username}_{DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss")}_{file.Name}";
+                var FileUrl = $"{AppConstants.UploadUrlPrefix}{newName}";
+                await AzureBlobHelper.UploadFile(newName, bytes);
+               
+                NewPost.DocUrls = FileUrl;
+
+            }
+            IsUploading = false;
+            break;
+        }
+    }
 }
+

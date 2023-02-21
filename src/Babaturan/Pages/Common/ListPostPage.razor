@@ -2,7 +2,7 @@
 @inject IJSRuntime IJS
 @inject UserProfileService UserSvc
 @inject IToastService toastService
-@inject PostCommentService CommentSvc 
+@inject PostCommentService CommentSvc
 @inject AppState AppState
 @implements IDisposable
 @if (ListPost != null)
@@ -48,11 +48,45 @@
             <!-- Card header END -->
             <!-- Card body START -->
             <div class="card-body">
-                <p>@((MarkupString)post.Message.ParseURL().ParseUsername().ParseHashtag())</p>
+                @if (post.PostType == PostTypes.EventPost)
+                {
+                    <a class="btn btn-xs btn-primary mt-n3" href="/event-detail/@post.Id">@post.Event?.Category </a>
+                    <h6 class="mt-3"> <a href="/event-detail/@post.Id"> @post.Event?.Title </a> </h6>
+                    <!-- Date time -->
+                    <p class="mb-0 small"> <i class="bi bi-calendar-check pe-1"></i> @($"{post.Event?.EventDate.ToString("ddd, MMM dd, yyyy")} at {post.Event?.EventDate.ToString("HH:mm")} ") </p>
+                    <p class="small"> <i class="bi bi-geo-alt pe-1"></i> @post.Event?.EventLocation.Address </p>
+                    <!-- Avatar group START -->
+                    <ul class="avatar-group list-unstyled align-items-center mb-0">
+                        @{
+                            var usercount = 0;
+                        }
+                        @foreach (var guest in post.Event.Guests)
+                        {
+                            if (usercount++ > 3) break;
+                            <li class="avatar avatar-xs">
+                                <img class="avatar-img rounded-circle" src="@($"/api/User/GetPicByUsername?Username={Uri.EscapeDataString(guest.ItemValue)}")" alt="avatar">
+                            </li>
+                        }
+                        @if (post.Event.Guests.Count - 3 > 0)
+                        {
+                            <li class="avatar avatar-xs">
+                                <div class="avatar-img rounded-circle bg-primary"><span class="smaller text-white position-absolute top-50 start-50 translate-middle">+@(post.Event?.Guests.Count - 3)</span></div>
+                            </li>
+                            <li class="ms-3">
+                                <small> are attending</small>
+                            </li>
+                        }
+
+                    </ul>
+                    <!-- Avatar group END -->
+                }else{
+        <p>@((MarkupString)post.Message.ParseURL().ParseUsername().ParseHashtag())</p>
+                }
+
                 <!-- Card img -->
                 @if (post.PostType == PostTypes.ImagePost)
                 {
-                        <img class="card-img" src="@post.ImageUrls" alt="Post">
+                    <img class="card-img" src="@post.ImageUrls" alt="Post">
                 }
                 else if (post.PostType == PostTypes.VideoPost)
                 {
@@ -68,10 +102,11 @@
                         <!-- Plyr resources and browser polyfills are specified in the pen settings -->
                     </div>
                 }
+
                 <!-- Feed react START -->
                 <ul class="nav nav-stack py-3 small">
                     <li class="nav-item">
-                        
+
                         <a class="nav-link active" @onclick:preventDefault @onclick="(() => TogglePostLike(post, LikeList[post.Id]))" href="#!"> <i class="bi bi-hand-thumbs-up-fill pe-1"></i>Liked (@post.PostLikes.Count.ToString("n0"))</a>
                     </li>
                     <li class="nav-item">
@@ -110,7 +145,7 @@
                 <ul class="comment-wrap list-unstyled">
                     @if (post.PostComments != null)
                     {
-                        @foreach (var comment in post.PostComments.OrderByDescending(x=>x.Id))
+                        @foreach (var comment in post.PostComments.OrderByDescending(x => x.Id))
                         {
 
                             <!-- Comment item START -->
@@ -133,7 +168,7 @@
                                         <ul class="nav nav-divider py-2 small">
                                             <li class="nav-item">
                                                 <a class="nav-link" @onclick:preventDefault @onclick="(() => ToggleCommentLike(comment, CommentLikeList[comment.Id]))" href="#!"> Like (@comment.CommentLikes.Count)</a>
-                                            </li>                                                                                       
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -141,7 +176,7 @@
                                 <!-- Comment item nested END -->
                             </li>
                             <!-- Comment item END -->
-                        }}
+                        }       }
                 </ul>
                 <!-- Comment wrap END -->
             </div>
@@ -162,7 +197,7 @@
         </div>
         <!-- Card feed item END -->
     }
-        
+
 @code {
     public enum FeedTypes { Timeline, OnlyMe, Liked, Repost, Mention, Trending }
 
@@ -177,7 +212,7 @@
     public string UserName { get; set; }
     void PostRefresh(string Username)
     {
-        if(Username == selUser.Username)
+        if (Username == selUser.Username)
             Refresh();
         //StateHasChanged();
     }
@@ -205,8 +240,14 @@
             }
             else
             {
-                var newComment = new PostComment() { PostId = ActivePostId, Comment = msg, CreatedDate=DateHelper.GetLocalTimeNow(),
-                    UserId = selUser.Id, Username=selUser.Username};
+                var newComment = new PostComment()
+                    {
+                        PostId = ActivePostId,
+                        Comment = msg,
+                        CreatedDate = DateHelper.GetLocalTimeNow(),
+                        UserId = selUser.Id,
+                        Username = selUser.Username
+                    };
                 var res = CommentSvc.InsertData(newComment);
                 if (res)
                 {
@@ -291,9 +332,9 @@
                             {
                                 LikeList.Add(x.Id, false);
                             }
-                            if(x.PostComments!=null)
-                            foreach(var c in x.PostComments)
-                            {
+                            if (x.PostComments != null)
+                                foreach (var c in x.PostComments)
+                                {
                                     if (c.CommentLikes != null)
                                     {
                                         CommentLikeList.Add(c.Id, c.CommentLikes.Any(c => c.LikedByUserId == selUser.Id));
@@ -302,7 +343,7 @@
                                     {
                                         CommentLikeList.Add(c.Id, false);
                                     }
-                            }
+                                }
                         });
 
                     }
@@ -485,7 +526,7 @@
                                     }
                                 }
                         });
-                        
+
 
                     }
                 }
@@ -495,7 +536,7 @@
         NewComments.Clear();
         ListPost?.ForEach(x =>
         {
-            NewComments.Add(x.Id,string.Empty);
+            NewComments.Add(x.Id, string.Empty);
         });
 
     }
@@ -519,5 +560,5 @@
         AppState.OnPostChange += PostRefresh;
         LoadData();
     }
-    }
+}
 

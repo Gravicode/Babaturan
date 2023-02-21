@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Babaturan.Data;
+using Babaturan.Helpers;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +12,44 @@ namespace Babaturan.Controllers
     [ApiController]
     public class UserController : Controller
     {
+        StorageObjectService blob;
+        UserProfileService UserSvc;
+        public UserController(UserProfileService userSvc, StorageObjectService blob)
+        {
+            this.blob = blob;
+
+            this.UserSvc = userSvc;
+        }
+        // /api/User/GetPicByUsername
+        [HttpGet("[action]")]
+        public async Task<IActionResult> GetPicByUsername(string Username)
+        {
+            try
+            {
+
+                var usr = UserSvc.GetItemByUsername(Username);
+                if (usr != null)
+                {
+                    var fname = usr.PicUrl.Replace("/api/dms/getfile?filename=", string.Empty);
+                    var item = await blob.DownloadByKey(fname);
+                    var file = item.Data;
+                    if (file != null)
+                    {
+
+                        var mime = MimeTypeHelper.GetMimeType(Path.GetExtension(fname));
+                        return File(file, mime, fname);
+                    }
+                }
+               
+               
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+            return NotFound();
+        }
         // /api/User/GetUser
         [HttpGet("[action]")]
         public UserModel GetUser()

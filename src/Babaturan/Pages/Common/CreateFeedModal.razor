@@ -1,15 +1,15 @@
 ﻿@inject NavigationManager NavMgr
-@inject AzureBlobHelper AzureBlobHelper;
+@inject AzureBlobHelper AzureBlobHelper
 @inject IJSRuntime IJS
 @using System.IO
 @using System.Text.Json
-@using System.Text.RegularExpressions;
+@using System.Text.RegularExpressions
 @inject IToastService toastService
 @inject UserProfileService UserSvc
 @inject PostService PostSvc
 @inject TrendingService TrendingSvc
 @inject AppState AppState
-@using Xabe.FFmpeg;
+@using Xabe.FFmpeg
 @implements IDisposable
 <div class="modal fade" id="modalCreateFeed" tabindex="-1" aria-labelledby="modalLabelCreateFeed" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -45,7 +45,7 @@
                 <InputFile @ref="imageUpload" id="uploadImage1" accept=".jpg,.png,.jpeg,.gif" OnChange="UploadFiles" hidden />
                 <InputFile @ref="videoUpload" id="uploadVideo1" accept=".mp4,.avi,.wmv,.3gp" OnChange="UploadFiles" hidden />
                 @if (IsUploading)
-                {                   
+                {
                     <button class="btn btn-primary" type="button" disabled>
                         <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
                         @DriveHelper.GetSize(CurrentFile.Size). @(DriveHelper.GetSize((double)(100 - ProgressPercent) / 100 * CurrentFile.Size)) lagi.
@@ -78,251 +78,251 @@
     </div>
 </div>
 @code {
-    @code {
-        private decimal progressPercent;
-        int ProgressPercent;
-        bool IsUploading { set; get; } = false;
-        [Parameter]
-        public Action PostDataChanged { get; set; }
-        InputFile imageUpload;
-        InputFile videoUpload;
-        [Parameter]
-        public Post NewPost { get; set; }
-        UploadTypes TipeUpload;
-        UserProfile selUser;
-        public enum UploadTypes { Image, Doc, Video }
-        async Task PrepareUpload(UploadTypes tipe)
+
+    private decimal progressPercent;
+    int ProgressPercent;
+    bool IsUploading { set; get; } = false;
+    [Parameter]
+    public Action PostDataChanged { get; set; }
+    InputFile imageUpload;
+    InputFile videoUpload;
+    [Parameter]
+    public Post NewPost { get; set; }
+    UploadTypes TipeUpload;
+    UserProfile selUser;
+    public enum UploadTypes { Image, Doc, Video }
+    async Task PrepareUpload(UploadTypes tipe)
+    {
+        TipeUpload = tipe;
+        switch (tipe)
         {
-            TipeUpload = tipe;
-            switch (tipe)
-            {
-                case UploadTypes.Image:
-                    await IJS.InvokeVoidAsync("OpenFileUpload", "uploadImage1");
-                    NewPost.PostType = PostTypes.ImagePost;
-                    break;
-                case UploadTypes.Video:
-                    await IJS.InvokeVoidAsync("OpenFileUpload", "uploadVideo1");
-                    NewPost.PostType = PostTypes.VideoPost;
-                    break;
-            }
-
-        }
-        void NewPostRefresh(string Username)
-        {
-            this.NewPost = new();
-            StateHasChanged();
-        }
-        void IDisposable.Dispose()
-        {
-            AppState.OnNewPostChange -= NewPostRefresh;
-        }
-        string ErrorMsg;
-        async Task NotAvailable()
-        {
-            toastService.ShowWarning("Not available yet.");
-        }
-        [CascadingParameter]
-        private Task<AuthenticationState> authenticationStateTask { get; set; }
-        string Username;
-        protected override async Task OnInitializedAsync()
-        {
-            var user = (await authenticationStateTask).User;
-
-            if (user.Identity.IsAuthenticated)
-            {
-                Username = user.Identity.Name;
-                selUser = UserSvc.GetItemByUsername(Username);
-
-            }
-            AppState.OnNewPostChange += NewPostRefresh;
-            if (NewPost == null) NewPost = new();
-        }
-        async Task PostMessage()
-        {
-            ErrorMsg = "";
-
-            if (string.IsNullOrEmpty(NewPost.Message))
-            {
-                ErrorMsg += "Tolong di isi pesan. ";
-
-            }
-            if (NewPost.PostType == PostTypes.ImagePost && string.IsNullOrEmpty(NewPost.ImageUrls))
-            {
-                ErrorMsg += "Tolong pilih gambar. ";
-
-            }
-            if (NewPost.PostType == PostTypes.VideoPost && string.IsNullOrEmpty(NewPost.VideoUrls))
-            {
-                ErrorMsg += "Tolong pilih video. ";
-
-            }
-            if (ErrorMsg.Length > 0)
-            {
-                toastService.ShowWarning(ErrorMsg, "Perhatian");
-                return;
-            }
-
-            NewPost.CreatedDate = DateHelper.GetLocalTimeNow();
-            NewPost.Id = 0;
-            NewPost.UserName = Username;
-            //get link if exists
-            //var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            var linkParser = new Regex(@"(http(s)?://)?([\w-]+\.)+[\w-]+(/\S\w[\w- ;,./?%&=]\S*)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            var cnt = 0;
-            NewPost.LinkUrls = "";
-            foreach (Match m in linkParser.Matches(NewPost.Message))
-            {
-                if (cnt > 0) NewPost.LinkUrls += ";";
-                NewPost.LinkUrls += m.Value;
-                cnt++;
-            }
-            //extract hashtag
-            var regex = new Regex(@"#\w+");
-            var matches = regex.Matches(NewPost.Message);
-            cnt = 0;
-            NewPost.Hashtags = "";
-            foreach (Match m in matches)
-            {
-                if (cnt > 0) NewPost.Hashtags += ";";
-                NewPost.Hashtags += m.Value;
-                cnt++;
-            }
-            //extract mention
-            regex = new Regex("(@)((?:[A-Za-z0-9-_]*))");
-            matches = regex.Matches(NewPost.Message);
-            cnt = 0;
-            NewPost.Mentions = "";
-            foreach (Match m in matches)
-            {
-                if (cnt > 0) NewPost.Mentions += ";";
-                NewPost.Mentions += m.Value;
-                cnt++;
-            }
-
-
-            if (selUser != null)
-            {
-                NewPost.UserId = selUser.Id;
-            }
-            if (PostSvc.InsertData(NewPost))
-            {
-                TrendingSvc.InsertFromPost(selUser, NewPost);
-                toastService.ShowSuccess("Posting berhasil.", "Info");
-                AppState.RefreshPost(selUser.Username);
-                await IJS.InvokeVoidAsync("CloseModal", "modalCreateFeed");
-
-                PostDataChanged?.Invoke();
-
-            }
-            else
-            {
-                toastService.ShowError("Gagal posting, ga tau kenapa..", "Kecele");
-            }
-        }
-        public IBrowserFile CurrentFile { get; set; }
-        private async Task UploadFiles(InputFileChangeEventArgs e)
-        {
-            IsUploading = true;
-            ProgressPercent = 0;
-            progressPercent = 0;
-            foreach (var file in e.GetMultipleFiles(e.FileCount))
-            {
-                //var file = e.File;
-                if (file != null)
-                {
-                    CurrentFile = file;
-                    var ms = new MemoryStream();
-                    using var readStream = file.OpenReadStream(AppConstants.MaxAllowedFileSize);
-                    var bytesRead = 0;
-                    var totalRead = 0;
-                    var buffer = new byte[1024 * 100];
-
-                    while ((bytesRead = await readStream.ReadAsync(buffer)) != 0)
-                    {
-                        totalRead += bytesRead;
-
-                        await ms.WriteAsync(buffer, 0, bytesRead);
-
-                        progressPercent = Decimal.Divide(totalRead, file.Size);
-                        ProgressPercent = (int)(100 * progressPercent);
-                        StateHasChanged();
-                        await Task.Delay(1);
-                    }
-
-
-                    byte[] bytes = ms.ToArray();
-
-                    if (TipeUpload == UploadTypes.Video)
-                    {
-                        
-                        //get thumbnail
-                        try
-                        {
-                            NewPost.Video = new PostVideo() { Category = "General" };
-                            var pathToVideoFile = Path.GetTempFileName() + Path.GetExtension(file.Name);
-                            var screenShotFile = Path.GetTempFileName() + ".png";
-                            File.WriteAllBytes(pathToVideoFile, bytes);
-                            var mediaInfo = await FFmpeg.GetMediaInfo(pathToVideoFile);
-                            NewPost.Video.Duration = mediaInfo.Duration;
-                            //IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(pathToVideoFile, screenShotFile, TimeSpan.FromSeconds(0));
-                            //IConversionResult result = await conversion.Start();
-                            Func<string, string> outputFileNameBuilder = (number) => { return screenShotFile; };
-
-                            IVideoStream videoStream = mediaInfo.VideoStreams.First()?.SetCodec(VideoCodec.png);
-
-                            IConversionResult conversionResult = await FFmpeg.Conversions.New()
-                                .AddStream(videoStream)
-                                .ExtractNthFrame(10, outputFileNameBuilder)
-                                .Start();
-
-
-                            
-                            if (File.Exists(screenShotFile))
-                            {
-                                var ScreenShotName = $"Screenshot_{(string.IsNullOrEmpty(selUser.Username) ? "rojul" : selUser.Username)}_{UIDHelper.CreateNewUID()}.png";
-                                var imageBytes = File.ReadAllBytes(screenShotFile);
-                                var FileUrlImg = $"{AppConstants.UploadUrlPrefix}{ScreenShotName}";
-                                await AzureBlobHelper.UploadFile(ScreenShotName, imageBytes);
-                                NewPost.Video.ThumbnailUrl = FileUrlImg;
-                            }
-
-                        }
-                        catch (Exception ex)
-                        {
-
-                            Console.WriteLine(ex);
-                        }
-
-                    }
-                    else
-                    {
-                        var resized = SKiaImageHelper.Resize(bytes, 800, 600);
-                        bytes = resized.FileContents;
-                    }
-
-                    string newName = string.Empty;
-
-                    newName = $"lampiran_{TipeUpload.ToString()}_{Username}_{DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss")}_{file.Name}";
-                    var FileUrl = $"{AppConstants.UploadUrlPrefix}{newName}";
-                    await AzureBlobHelper.UploadFile(newName, bytes);
-                    switch (TipeUpload)
-                    {
-                        case UploadTypes.Doc:
-                            NewPost.DocUrls = FileUrl;
-                            break;
-                        case UploadTypes.Image:
-                            NewPost.ImageUrls = FileUrl;
-                            break;
-                        case UploadTypes.Video:
-                            NewPost.Video.Title = file.Name;
-                            NewPost.VideoUrls = FileUrl;
-                            break;
-                    }
-                }
+            case UploadTypes.Image:
+                await IJS.InvokeVoidAsync("OpenFileUpload", "uploadImage1");
+                NewPost.PostType = PostTypes.ImagePost;
                 break;
-            }
-            IsUploading = false;
+            case UploadTypes.Video:
+                await IJS.InvokeVoidAsync("OpenFileUpload", "uploadVideo1");
+                NewPost.PostType = PostTypes.VideoPost;
+                break;
+        }
 
+    }
+    void NewPostRefresh(string Username)
+    {
+        this.NewPost = new();
+        StateHasChanged();
+    }
+    void IDisposable.Dispose()
+    {
+        AppState.OnNewPostChange -= NewPostRefresh;
+    }
+    string ErrorMsg;
+    async Task NotAvailable()
+    {
+        toastService.ShowWarning("Not available yet.");
+    }
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string Username;
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            Username = user.Identity.Name;
+            selUser = UserSvc.GetItemByUsername(Username);
+
+        }
+        AppState.OnNewPostChange += NewPostRefresh;
+        if (NewPost == null) NewPost = new();
+    }
+    async Task PostMessage()
+    {
+        ErrorMsg = "";
+
+        if (string.IsNullOrEmpty(NewPost.Message))
+        {
+            ErrorMsg += "Tolong di isi pesan. ";
+
+        }
+        if (NewPost.PostType == PostTypes.ImagePost && string.IsNullOrEmpty(NewPost.ImageUrls))
+        {
+            ErrorMsg += "Tolong pilih gambar. ";
+
+        }
+        if (NewPost.PostType == PostTypes.VideoPost && string.IsNullOrEmpty(NewPost.VideoUrls))
+        {
+            ErrorMsg += "Tolong pilih video. ";
+
+        }
+        if (ErrorMsg.Length > 0)
+        {
+            toastService.ShowWarning(ErrorMsg, "Perhatian");
+            return;
+        }
+
+        NewPost.CreatedDate = DateHelper.GetLocalTimeNow();
+        NewPost.Id = 0;
+        NewPost.UserName = Username;
+        //get link if exists
+        //var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        var linkParser = new Regex(@"(http(s)?://)?([\w-]+\.)+[\w-]+(/\S\w[\w- ;,./?%&=]\S*)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        var cnt = 0;
+        NewPost.LinkUrls = "";
+        foreach (Match m in linkParser.Matches(NewPost.Message))
+        {
+            if (cnt > 0) NewPost.LinkUrls += ";";
+            NewPost.LinkUrls += m.Value;
+            cnt++;
+        }
+        //extract hashtag
+        var regex = new Regex(@"#\w+");
+        var matches = regex.Matches(NewPost.Message);
+        cnt = 0;
+        NewPost.Hashtags = "";
+        foreach (Match m in matches)
+        {
+            if (cnt > 0) NewPost.Hashtags += ";";
+            NewPost.Hashtags += m.Value;
+            cnt++;
+        }
+        //extract mention
+        regex = new Regex("(@)((?:[A-Za-z0-9-_]*))");
+        matches = regex.Matches(NewPost.Message);
+        cnt = 0;
+        NewPost.Mentions = "";
+        foreach (Match m in matches)
+        {
+            if (cnt > 0) NewPost.Mentions += ";";
+            NewPost.Mentions += m.Value;
+            cnt++;
+        }
+
+
+        if (selUser != null)
+        {
+            NewPost.UserId = selUser.Id;
+        }
+        if (PostSvc.InsertData(NewPost))
+        {
+            TrendingSvc.InsertFromPost(selUser, NewPost);
+            toastService.ShowSuccess("Posting berhasil.", "Info");
+            AppState.RefreshPost(selUser.Username);
+            await IJS.InvokeVoidAsync("CloseModal", "modalCreateFeed");
+
+            PostDataChanged?.Invoke();
+
+        }
+        else
+        {
+            toastService.ShowError("Gagal posting, ga tau kenapa..", "Kecele");
         }
     }
+    public IBrowserFile CurrentFile { get; set; }
+    private async Task UploadFiles(InputFileChangeEventArgs e)
+    {
+        IsUploading = true;
+        ProgressPercent = 0;
+        progressPercent = 0;
+        foreach (var file in e.GetMultipleFiles(e.FileCount))
+        {
+            //var file = e.File;
+            if (file != null)
+            {
+                CurrentFile = file;
+                var ms = new MemoryStream();
+                using var readStream = file.OpenReadStream(AppConstants.MaxAllowedFileSize);
+                var bytesRead = 0;
+                var totalRead = 0;
+                var buffer = new byte[1024 * 100];
+
+                while ((bytesRead = await readStream.ReadAsync(buffer)) != 0)
+                {
+                    totalRead += bytesRead;
+
+                    await ms.WriteAsync(buffer, 0, bytesRead);
+
+                    progressPercent = Decimal.Divide(totalRead, file.Size);
+                    ProgressPercent = (int)(100 * progressPercent);
+                    StateHasChanged();
+                    await Task.Delay(1);
+                }
+
+
+                byte[] bytes = ms.ToArray();
+
+                if (TipeUpload == UploadTypes.Video)
+                {
+
+                    //get thumbnail
+                    try
+                    {
+                        NewPost.Video = new PostVideo() { Category = "General" };
+                        var pathToVideoFile = Path.GetTempFileName() + Path.GetExtension(file.Name);
+                        var screenShotFile = Path.GetTempFileName() + ".png";
+                        File.WriteAllBytes(pathToVideoFile, bytes);
+                        var mediaInfo = await FFmpeg.GetMediaInfo(pathToVideoFile);
+                        NewPost.Video.Duration = mediaInfo.Duration;
+                        //IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(pathToVideoFile, screenShotFile, TimeSpan.FromSeconds(0));
+                        //IConversionResult result = await conversion.Start();
+                        Func<string, string> outputFileNameBuilder = (number) => { return screenShotFile; };
+
+                        IVideoStream videoStream = mediaInfo.VideoStreams.First()?.SetCodec(VideoCodec.png);
+
+                        IConversionResult conversionResult = await FFmpeg.Conversions.New()
+                            .AddStream(videoStream)
+                            .ExtractNthFrame(10, outputFileNameBuilder)
+                            .Start();
+
+
+
+                        if (File.Exists(screenShotFile))
+                        {
+                            var ScreenShotName = $"Screenshot_{(string.IsNullOrEmpty(selUser.Username) ? "rojul" : selUser.Username)}_{UIDHelper.CreateNewUID()}.png";
+                            var imageBytes = File.ReadAllBytes(screenShotFile);
+                            var FileUrlImg = $"{AppConstants.UploadUrlPrefix}{ScreenShotName}";
+                            await AzureBlobHelper.UploadFile(ScreenShotName, imageBytes);
+                            NewPost.Video.ThumbnailUrl = FileUrlImg;
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Console.WriteLine(ex);
+                    }
+
+                }
+                else
+                {
+                    var resized = SKiaImageHelper.Resize(bytes, 800, 600);
+                    bytes = resized.FileContents;
+                }
+
+                string newName = string.Empty;
+
+                newName = $"lampiran_{TipeUpload.ToString()}_{Username}_{DateTime.Now.ToString("dd_MM_yyyy_HH_mm_ss")}_{file.Name}";
+                var FileUrl = $"{AppConstants.UploadUrlPrefix}{newName}";
+                await AzureBlobHelper.UploadFile(newName, bytes);
+                switch (TipeUpload)
+                {
+                    case UploadTypes.Doc:
+                        NewPost.DocUrls = FileUrl;
+                        break;
+                    case UploadTypes.Image:
+                        NewPost.ImageUrls = FileUrl;
+                        break;
+                    case UploadTypes.Video:
+                        NewPost.Video.Title = file.Name;
+                        NewPost.VideoUrls = FileUrl;
+                        break;
+                }
+            }
+            break;
+        }
+        IsUploading = false;
+
+    }
 }
+
