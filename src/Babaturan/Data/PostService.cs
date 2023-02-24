@@ -69,6 +69,14 @@ namespace Babaturan.Data
                        select x;
             return data.ToList();
         }
+        public List<Post> FindByTag(string Tag,int Limit=120)
+        {
+            var data = from x in db.Posts.AsNoTracking().Include(c => c.PostComments).ThenInclude(c => c.CommentLikes).Include(c => c.PostComments).ThenInclude(c => c.User).Include(c => c.PostLikes).Include(c => c.User).Include(c => c.Reposts)
+                       where x.Hashtags.Contains(Tag)
+                       orderby x.Id descending
+                       select x;
+            return data.Take(Limit).ToList();
+        }
         public List<Post> GetTrendingPosts(int Number = 25)
         {
           
@@ -131,7 +139,7 @@ namespace Babaturan.Data
         {
             if (string.IsNullOrEmpty(Username)) return default;
 
-            var data = from x in db.Posts.Include(c => c.PostComments).Include(c => c.PostLikes).Include(c => c.User)
+            var data = from x in db.Posts.AsNoTracking().Include(c => c.PostComments).ThenInclude(c => c.CommentLikes).Include(c => c.PostComments).ThenInclude(c => c.User).Include(c => c.PostLikes).Include(c => c.User).Include(c => c.Reposts)
                        where x.UserName == Username
                        orderby x.Id descending
                        select x;
@@ -171,7 +179,8 @@ namespace Babaturan.Data
 
         public Post GetDataById(object Id)
         {
-            return db.Posts.Where(x => x.Id == (long)Id).FirstOrDefault();
+            return db.Posts.AsNoTracking().Include(c => c.PostComments).ThenInclude(c => c.CommentLikes).Include(c => c.PostComments).ThenInclude(c => c.User).Include(c => c.PostLikes).Include(c => c.User).Include(c => c.Reposts)
+                .Where(x => x.Id == (long)Id).FirstOrDefault();
         }
 
 

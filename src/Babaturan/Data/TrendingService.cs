@@ -37,6 +37,21 @@ namespace Babaturan.Data
         {
             return db.Trendings.OrderBy(x => x.Id).ToList();
         }
+         public List<string> GetTrendings(int Limit)
+        {
+
+            var listTrend = db.Trendings.GroupBy(info => info.Hashtag)
+                        .Select(group => new
+                        {
+                            hashtag = group.Key,
+                            count = group.Count(),
+                        }
+            ).AsEnumerable()
+                        .OrderByDescending(x => x.count).Take(Limit).ToList();
+            var hashtags = new HashSet<string>();
+            listTrend.ForEach(x => hashtags.Add(x.hashtag));
+            return hashtags.ToList();
+        }
 
         public Trending GetDataById(object Id)
         {
